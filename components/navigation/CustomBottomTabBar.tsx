@@ -31,21 +31,10 @@ export function CustomBottomTabBar({
   }, [openScanner]);
 
   const handleTabPress = useCallback(
-    (routeName: string, targetKey?: string) => {
+    (routeName: string) => {
       triggerHaptic('light');
       if (currentRouteName === routeName) {
         return; // Already on this tab, avoid re-rendering
-      }
-
-      if (navigation.emit && targetKey) {
-        try {
-          const event = navigation.emit({
-            type: 'tabPress',
-            target: targetKey,
-            canPreventDefault: true,
-          });
-          if (event && event.defaultPrevented) return;
-        } catch {}
       }
       navigation.navigate(routeName);
     },
@@ -65,7 +54,7 @@ export function CustomBottomTabBar({
       <View style={styles.innerBar}>
         {/* Tab 1: Home (Trang Chủ) */}
         <Pressable
-          onPress={() => handleTabPress('index', homeRoute?.key)}
+          onPress={() => handleTabPress('index')}
           style={styles.tabButton}
           hitSlop={8}
         >
@@ -89,7 +78,7 @@ export function CustomBottomTabBar({
 
         {/* Tab 2: Records (Bản Dịch) */}
         <Pressable
-          onPress={() => handleTabPress('two', recordsRoute?.key)}
+          onPress={() => handleTabPress('two')}
           style={styles.tabButton}
           hitSlop={8}
         >
@@ -116,7 +105,7 @@ export function CustomBottomTabBar({
           <Pressable
             onPress={handleScanPress}
             style={styles.scanButton}
-            hitSlop={10}
+            hitSlop={{ top: 16, bottom: 16, left: 16, right: 16 }}
           >
             <ScanLine size={26} color="#FFFFFF" strokeWidth={2.4} />
           </Pressable>
@@ -125,7 +114,7 @@ export function CustomBottomTabBar({
 
         {/* Tab 3: Trợ Lý (AI Assistant) */}
         <Pressable
-          onPress={() => handleTabPress('three', botRoute?.key)}
+          onPress={() => handleTabPress('three')}
           style={styles.tabButton}
           hitSlop={8}
         >
@@ -178,6 +167,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 8,
     elevation: 8,
+    overflow: 'visible',
   },
   innerBar: {
     flexDirection: 'row',
@@ -186,6 +176,7 @@ const styles = StyleSheet.create({
     height: Platform.OS === 'ios' ? 82 : 64,
     paddingBottom: Platform.OS === 'ios' ? 24 : 8,
     paddingHorizontal: 8,
+    overflow: 'visible',
   },
   tabButton: {
     flex: 1,

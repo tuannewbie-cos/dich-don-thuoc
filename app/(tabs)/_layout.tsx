@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { Tabs } from 'expo-router';
 import { CustomBottomTabBar } from '@/components/navigation/CustomBottomTabBar';
 import { PrescriptionScannerModal } from '@/components/features/scanner/PrescriptionScannerModal';
@@ -9,15 +9,28 @@ export default function TabLayout() {
   const { isScannerOpen, closeScanner } = usePrescriptionStore();
   const [showEmergency, setShowEmergency] = useState(false);
 
+  const handleOpenEmergency = useCallback(() => {
+    setShowEmergency(true);
+  }, []);
+
+  const handleCloseEmergency = useCallback(() => {
+    setShowEmergency(false);
+  }, []);
+
+  const renderTabBar = useCallback(
+    (props: any) => (
+      <CustomBottomTabBar
+        {...props}
+        onOpenEmergency={handleOpenEmergency}
+      />
+    ),
+    [handleOpenEmergency]
+  );
+
   return (
     <>
       <Tabs
-        tabBar={(props: any) => (
-          <CustomBottomTabBar
-            {...props}
-            onOpenEmergency={() => setShowEmergency(true)}
-          />
-        )}
+        tabBar={renderTabBar}
         screenOptions={{
           headerShown: false,
         }}
@@ -36,7 +49,7 @@ export default function TabLayout() {
       {/* Global 115 Emergency Modal */}
       <EmergencyCallModal
         visible={showEmergency}
-        onClose={() => setShowEmergency(false)}
+        onClose={handleCloseEmergency}
       />
     </>
   );

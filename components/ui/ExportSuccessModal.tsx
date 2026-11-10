@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, Pressable, Share, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Share, StyleSheet, Modal } from 'react-native';
 import { FileDown, CheckCircle2, Share2, X } from 'lucide-react-native';
 import { triggerHaptic } from '@/utils/haptics';
 
@@ -16,8 +16,6 @@ export function ExportSuccessModal({
   fileName,
   onClose,
 }: ExportSuccessModalProps) {
-  if (!visible) return null;
-
   const handleShare = async () => {
     triggerHaptic('light');
     try {
@@ -31,55 +29,62 @@ export function ExportSuccessModal({
   };
 
   return (
-    <View style={styles.overlayContainer}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.dialogCard}>
-        {/* Header Icon */}
-        <View style={styles.header}>
-          <View style={styles.iconBox}>
-            <FileDown size={32} color="#0066FE" />
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent={true}
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlayContainer}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={styles.dialogCard}>
+          {/* Header Icon */}
+          <View style={styles.header}>
+            <View style={styles.iconBox}>
+              <FileDown size={32} color="#0066FE" />
+            </View>
+            <View style={styles.badgeSuccess}>
+              <CheckCircle2 size={15} color="#059669" />
+              <Text style={styles.badgeSuccessText}>Xuất Thành Công!</Text>
+            </View>
+            <Text style={styles.title}>Bản Dịch Định Dạng {format}</Text>
           </View>
-          <View style={styles.badgeSuccess}>
-            <CheckCircle2 size={15} color="#059669" />
-            <Text style={styles.badgeSuccessText}>Xuất Thành Công!</Text>
-          </View>
-          <Text style={styles.title}>Bản Dịch Định Dạng {format}</Text>
-        </View>
 
-        {/* File Card Preview */}
-        <View style={styles.fileCard}>
-          <View style={styles.formatBadge}>
-            <Text style={styles.formatBadgeText}>{format}</Text>
+          {/* File Card Preview */}
+          <View style={styles.fileCard}>
+            <View style={styles.formatBadge}>
+              <Text style={styles.formatBadgeText}>{format}</Text>
+            </View>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.fileNameText} numberOfLines={1}>
+                {fileName}
+              </Text>
+              <Text style={styles.fileMetaText}>
+                Dung lượng: 1.4 MB • Chuẩn văn bản in y tế
+              </Text>
+            </View>
           </View>
-          <View style={{ flex: 1 }}>
-            <Text style={styles.fileNameText} numberOfLines={1}>
-              {fileName}
-            </Text>
-            <Text style={styles.fileMetaText}>
-              Dung lượng: 1.4 MB • Chuẩn văn bản in y tế
-            </Text>
+
+          {/* Action buttons */}
+          <View style={styles.buttonGroup}>
+            <Pressable onPress={handleShare} style={styles.shareBtn}>
+              <Share2 size={18} color="#FFFFFF" strokeWidth={2.2} />
+              <Text style={styles.shareBtnText}>Chia Sẻ & In Ấn Ngay</Text>
+            </Pressable>
+
+            <Pressable
+              onPress={() => {
+                triggerHaptic('light');
+                onClose();
+              }}
+              style={styles.closeBtn}
+            >
+              <Text style={styles.closeBtnText}>Đã Hiểu</Text>
+            </Pressable>
           </View>
-        </View>
-
-        {/* Action buttons */}
-        <View style={styles.buttonGroup}>
-          <Pressable onPress={handleShare} style={styles.shareBtn}>
-            <Share2 size={18} color="#FFFFFF" strokeWidth={2.2} />
-            <Text style={styles.shareBtnText}>Chia Sẻ & In Ấn Ngay</Text>
-          </Pressable>
-
-          <Pressable
-            onPress={() => {
-              triggerHaptic('light');
-              onClose();
-            }}
-            style={styles.closeBtn}
-          >
-            <Text style={styles.closeBtnText}>Đã Hiểu</Text>
-          </Pressable>
         </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 

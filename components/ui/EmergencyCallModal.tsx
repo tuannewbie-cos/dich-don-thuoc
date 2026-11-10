@@ -1,6 +1,6 @@
 import React from 'react';
-import { View, Text, Pressable, Alert, Linking, StyleSheet } from 'react-native';
-import { PhoneCall, ShieldAlert, X } from 'lucide-react-native';
+import { View, Text, Pressable, Alert, Linking, StyleSheet, Modal } from 'react-native';
+import { PhoneCall, ShieldAlert } from 'lucide-react-native';
 import { triggerHaptic } from '@/utils/haptics';
 
 interface EmergencyCallModalProps {
@@ -9,8 +9,6 @@ interface EmergencyCallModalProps {
 }
 
 export function EmergencyCallModal({ visible, onClose }: EmergencyCallModalProps) {
-  if (!visible) return null;
-
   const handleCall = () => {
     triggerHaptic('warning');
     const phoneNumber = 'tel:115';
@@ -29,52 +27,59 @@ export function EmergencyCallModal({ visible, onClose }: EmergencyCallModalProps
   };
 
   return (
-    <View style={styles.overlayContainer}>
-      <Pressable style={styles.backdrop} onPress={onClose} />
-      <View style={styles.dialogCard}>
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.iconBox}>
-            <PhoneCall size={30} color="#E11D48" />
+    <Modal
+      visible={visible}
+      animationType="fade"
+      transparent={true}
+      onRequestClose={onClose}
+    >
+      <View style={styles.overlayContainer}>
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={styles.dialogCard}>
+          {/* Header */}
+          <View style={styles.header}>
+            <View style={styles.iconBox}>
+              <PhoneCall size={30} color="#E11D48" />
+            </View>
+            <Text style={styles.title}>Tổng Đài Cấp Cứu 115</Text>
+            <Text style={styles.subTitle}>
+              Đường dây nóng y tế khẩn cấp toàn quốc 24/7
+            </Text>
           </View>
-          <Text style={styles.title}>Tổng Đài Cấp Cứu 115</Text>
-          <Text style={styles.subTitle}>
-            Đường dây nóng y tế khẩn cấp toàn quốc 24/7
-          </Text>
-        </View>
 
-        {/* Cảnh báo khi nào cần gọi */}
-        <View style={styles.warningBox}>
-          <View style={styles.warningHeader}>
-            <ShieldAlert size={16} color="#BE123C" />
-            <Text style={styles.warningTitle}>Khi nào cần gọi 115 khẩn cấp?</Text>
+          {/* Cảnh báo khi nào cần gọi */}
+          <View style={styles.warningBox}>
+            <View style={styles.warningHeader}>
+              <ShieldAlert size={16} color="#BE123C" />
+              <Text style={styles.warningTitle}>Khi nào cần gọi 115 khẩn cấp?</Text>
+            </View>
+            <Text style={styles.warningText}>
+              • Khó thở dữ dội, tím tái sau khi dùng thuốc.{'\n'}
+              • Sốc phản vệ, sưng phù môi/mặt hoặc phát ban.{'\n'}
+              • Co giật hoặc mất ý thức đột ngột.
+            </Text>
           </View>
-          <Text style={styles.warningText}>
-            • Khó thở dữ dội, tím tái sau khi dùng thuốc.{'\n'}
-            • Sốc phản vệ, sưng phù môi/mặt hoặc phát ban.{'\n'}
-            • Co giật hoặc mất ý thức đột ngột.
-          </Text>
-        </View>
 
-        {/* Buttons */}
-        <View style={styles.buttonGroup}>
-          <Pressable onPress={handleCall} style={styles.callBtn}>
-            <PhoneCall size={18} color="#FFFFFF" strokeWidth={2.4} />
-            <Text style={styles.callBtnText}>Gọi 115 Ngay Bây Giờ</Text>
-          </Pressable>
+          {/* Buttons */}
+          <View style={styles.buttonGroup}>
+            <Pressable onPress={handleCall} style={styles.callBtn}>
+              <PhoneCall size={18} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.callBtnText}>Gọi 115 Ngay Bây Giờ</Text>
+            </Pressable>
 
-          <Pressable
-            onPress={() => {
-              triggerHaptic('light');
-              onClose();
-            }}
-            style={styles.cancelBtn}
-          >
-            <Text style={styles.cancelBtnText}>Đóng / Hủy Bỏ</Text>
-          </Pressable>
+            <Pressable
+              onPress={() => {
+                triggerHaptic('light');
+                onClose();
+              }}
+              style={styles.cancelBtn}
+            >
+              <Text style={styles.cancelBtnText}>Đóng / Hủy Bỏ</Text>
+            </Pressable>
+          </View>
         </View>
       </View>
-    </View>
+    </Modal>
   );
 }
 

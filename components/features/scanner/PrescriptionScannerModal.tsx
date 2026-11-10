@@ -6,6 +6,7 @@ import {
   ScrollView,
   StyleSheet,
   ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import {
@@ -56,8 +57,6 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
     };
   }, []);
 
-  if (!visible) return null;
-
   const handleScanPreset = (rx: Prescription) => {
     triggerHaptic('medium');
     setAnalyzing(true);
@@ -102,7 +101,12 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
     : '';
 
   return (
-    <View style={[StyleSheet.absoluteFill, styles.overlayWrapper]}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="fullScreen"
+      onRequestClose={handleClose}
+    >
       <SafeAreaView
         style={[
           styles.safeArea,
@@ -396,7 +400,7 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
           onClose={() => setShowEmergency(false)}
         />
       </SafeAreaView>
-    </View>
+    </Modal>
   );
 }
 

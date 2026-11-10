@@ -227,8 +227,13 @@ export function DoctorChatbotScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Google AI Studio API Key Modal (Zero-crash Overlay) */}
-      {showKeyModal && (
+      {/* Google AI Studio API Key Modal (Zero-crash Native Modal) */}
+      <Modal
+        visible={showKeyModal}
+        animationType="fade"
+        transparent={true}
+        onRequestClose={() => setShowKeyModal(false)}
+      >
         <View style={styles.modalBackdrop}>
           <Pressable
             style={StyleSheet.absoluteFill}
@@ -266,7 +271,7 @@ export function DoctorChatbotScreen() {
             </View>
           </View>
         </View>
-      )}
+      </Modal>
 
       {/* Emergency 115 Modal */}
       <EmergencyCallModal
