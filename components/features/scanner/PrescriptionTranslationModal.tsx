@@ -1,18 +1,24 @@
 import React, { useState } from 'react';
-import { View, Text, Pressable, ScrollView, Modal, SafeAreaView, Image } from 'react-native';
+import {
+  View,
+  Text,
+  Pressable,
+  ScrollView,
+  Modal,
+  SafeAreaView,
+  Image,
+  StyleSheet,
+} from 'react-native';
 import {
   FileText,
   FileDown,
   PhoneCall,
   Bot,
   ShieldAlert,
-  CheckCircle2,
   X,
   Stethoscope,
   Building2,
-  Calendar,
   Pill,
-  Sparkles,
   ArrowRight,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
@@ -43,20 +49,20 @@ export function PrescriptionTranslationModal({
     setExportFormat(format);
   };
 
-  const fileName = `BanDich_DonThuoc_${prescription.id}.` + (exportFormat?.toLowerCase() || 'pdf');
+  const fileName = `BanDich_DonThuoc_${prescription.id}.${exportFormat?.toLowerCase() || 'pdf'}`;
 
   return (
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <SafeAreaView className="flex-1 bg-[#F5F7FB]">
+      <SafeAreaView style={styles.safeArea}>
         {/* Top Bar */}
-        <View className="flex-row items-center justify-between px-5 py-3.5 bg-white border-b border-slate-100">
-          <View className="flex-row items-center gap-2">
-            <View className="size-8 items-center justify-center rounded-xl bg-blue-50">
-              <FileText size={18} color="#2563EB" />
+        <View style={styles.topBar}>
+          <View style={styles.headerLeft}>
+            <View style={styles.headerIconBox}>
+              <FileText size={18} color="#0066FE" />
             </View>
             <View>
-              <Text className="text-base font-bold text-zinc-900">Bản Dịch Đơn Thuốc Bác Sĩ</Text>
-              <Text className="text-[11px] text-emerald-600 font-semibold">
+              <Text style={styles.headerTitle}>Bản Dịch Đơn Thuốc Bác Sĩ</Text>
+              <Text style={styles.headerSub}>
                 ✓ Đã số hóa từ chữ viết tay bằng AI OCR
               </Text>
             </View>
@@ -67,7 +73,7 @@ export function PrescriptionTranslationModal({
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               onClose();
             }}
-            className="size-8 items-center justify-center rounded-full bg-slate-100 active:bg-slate-200"
+            style={styles.closeBtn}
           >
             <X size={18} color="#64748B" />
           </Pressable>
@@ -75,65 +81,63 @@ export function PrescriptionTranslationModal({
 
         <ScrollView
           showsVerticalScrollIndicator={false}
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 50 }}
+          contentContainerStyle={styles.scrollContent}
         >
           {/* Quick Action Bar: Export PDF, DOCX, Call 115 */}
-          <View className="flex-row gap-2 mb-4">
+          <View style={styles.actionRow}>
             <Pressable
               onPress={() => handleExport('PDF')}
-              className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-2xl bg-blue-600 active:scale-[0.98] shadow-sm shadow-blue-500/25"
+              style={[styles.actionBtn, styles.actionBtnPdf]}
             >
-              <FileDown size={16} color="#FFFFFF" />
-              <Text className="text-xs font-bold text-white">Xuất PDF</Text>
+              <FileDown size={16} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.actionBtnText}>Xuất PDF</Text>
             </Pressable>
 
             <Pressable
               onPress={() => handleExport('DOCX')}
-              className="flex-1 flex-row items-center justify-center gap-1.5 py-3 rounded-2xl bg-indigo-600 active:scale-[0.98] shadow-sm shadow-indigo-500/25"
+              style={[styles.actionBtn, styles.actionBtnDocx]}
             >
-              <FileDown size={16} color="#FFFFFF" />
-              <Text className="text-xs font-bold text-white">Xuất DOCX</Text>
+              <FileDown size={16} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.actionBtnText}>Xuất DOCX</Text>
             </Pressable>
 
             <Pressable
               onPress={() => setShowEmergency(true)}
-              className="flex-row items-center justify-center gap-1.5 px-3 py-3 rounded-2xl bg-rose-50 border border-rose-200 active:scale-[0.98]"
+              style={styles.sosActionBtn}
             >
               <PhoneCall size={16} color="#E11D48" />
-              <Text className="text-xs font-bold text-rose-700">Gọi 115</Text>
+              <Text style={styles.sosActionText}>Gọi 115</Text>
             </Pressable>
           </View>
 
           {/* Scanned Original Photo Comparison */}
           {prescription.imageUrl && (
-            <View className="mb-4 overflow-hidden rounded-[26px] bg-white p-3.5 border border-slate-100 shadow-sm">
-              <View className="flex-row items-center justify-between mb-2 px-1">
-                <Text className="text-xs font-bold uppercase tracking-wider text-zinc-400">
-                  Ảnh Chụp Đơn Viết Tay Bác Sĩ (Gốc)
-                </Text>
-                <View className="px-2 py-0.5 rounded-full bg-blue-50">
-                  <Text className="text-[10px] font-bold text-blue-700">Độ tin cậy 99.4%</Text>
+            <View style={styles.card}>
+              <View style={styles.cardHeaderSmall}>
+                <Text style={styles.cardSectionTag}>Ảnh Chụp Đơn Viết Tay Bác Sĩ</Text>
+                <View style={styles.confidenceBadge}>
+                  <Text style={styles.confidenceText}>Độ tin cậy 99.4%</Text>
                 </View>
               </View>
               <Image
                 source={{ uri: prescription.imageUrl }}
-                className="w-full h-36 rounded-2xl bg-slate-100"
+                style={styles.originalImage}
                 resizeMode="cover"
               />
             </View>
           )}
 
           {/* Hospital & Doctor Metadata Card */}
-          <View className="mb-4 overflow-hidden rounded-[28px] bg-white p-5 border border-slate-100 shadow-sm">
-            <View className="flex-row items-center gap-3 pb-3 border-b border-slate-100">
-              <View className="size-11 items-center justify-center rounded-2xl bg-blue-50">
-                <Stethoscope size={22} color="#2563EB" />
+          <View style={styles.card}>
+            <View style={styles.doctorHeader}>
+              <View style={styles.doctorIconBox}>
+                <Stethoscope size={22} color="#0066FE" />
               </View>
-              <View className="flex-1">
-                <Text className="text-base font-bold text-zinc-900">{prescription.doctorName}</Text>
-                <View className="flex-row items-center gap-1 mt-0.5">
+              <View style={{ flex: 1 }}>
+                <Text style={styles.doctorName}>{prescription.doctorName}</Text>
+                <View style={styles.hospitalRow}>
                   <Building2 size={12} color="#64748B" />
-                  <Text className="text-xs text-zinc-500" numberOfLines={1}>
+                  <Text style={styles.hospitalText} numberOfLines={1}>
                     {prescription.hospital}
                   </Text>
                 </View>
@@ -141,27 +145,23 @@ export function PrescriptionTranslationModal({
             </View>
 
             {/* Diagnosis */}
-            <View className="pt-3">
-              <Text className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
-                Chẩn Đoán Lâm Sàng
-              </Text>
-              <View className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100/80">
-                <Text className="text-sm font-bold text-blue-900">{prescription.diagnosis}</Text>
+            <View style={styles.diagnosisSection}>
+              <Text style={styles.cardSectionTag}>Chẩn Đoán Lâm Sàng</Text>
+              <View style={styles.diagnosisBox}>
+                <Text style={styles.diagnosisText}>{prescription.diagnosis}</Text>
               </View>
             </View>
           </View>
 
           {/* Safety Warnings Banner */}
           {prescription.safetyNotes && prescription.safetyNotes.length > 0 && (
-            <View className="mb-4 overflow-hidden rounded-[26px] bg-amber-50/80 p-4 border border-amber-200/80 shadow-sm">
-              <View className="flex-row items-center gap-2 mb-2">
+            <View style={styles.warningCard}>
+              <View style={styles.warningHeader}>
                 <ShieldAlert size={18} color="#D97706" />
-                <Text className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                  Cảnh Báo An Toàn & Kiêng Khem
-                </Text>
+                <Text style={styles.warningTitle}>Cảnh Báo An Toàn & Kiêng Khem</Text>
               </View>
               {prescription.safetyNotes.map((note, idx) => (
-                <Text key={idx} className="text-xs text-amber-900 leading-relaxed mb-1">
+                <Text key={idx} style={styles.warningText}>
                   • {note}
                 </Text>
               ))}
@@ -169,42 +169,38 @@ export function PrescriptionTranslationModal({
           )}
 
           {/* Translated Medications Table */}
-          <View className="mb-4 overflow-hidden rounded-[28px] bg-white p-5 border border-slate-100 shadow-sm">
-            <View className="flex-row items-center justify-between mb-3 pb-2 border-b border-slate-100">
-              <View className="flex-row items-center gap-2">
-                <Pill size={18} color="#2563EB" />
-                <Text className="text-sm font-bold text-zinc-900">
+          <View style={styles.card}>
+            <View style={styles.medsHeader}>
+              <View style={styles.medsHeaderLeft}>
+                <Pill size={18} color="#0066FE" />
+                <Text style={styles.medsTitle}>
                   Danh Mục Thuốc Đã Dịch ({prescription.medications.length} loại)
                 </Text>
               </View>
-              <Text className="text-xs text-zinc-400">Chuẩn hóa GPP</Text>
+              <Text style={styles.medsSub}>Chuẩn GPP</Text>
             </View>
 
-            <View className="gap-3">
+            <View style={styles.medsList}>
               {prescription.medications.map((med, index) => (
-                <View
-                  key={med.id || index}
-                  className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/60"
-                >
-                  <View className="flex-row items-center justify-between mb-1.5">
-                    <View className="flex-row items-center gap-2">
-                      <View className="size-6 items-center justify-center rounded-lg bg-blue-100">
-                        <Text className="text-xs font-bold text-blue-700">{index + 1}</Text>
+                <View key={med.id || index} style={styles.medItem}>
+                  <View style={styles.medItemHeader}>
+                    <View style={styles.medNameRow}>
+                      <View style={styles.medIndexBadge}>
+                        <Text style={styles.medIndexText}>{index + 1}</Text>
                       </View>
-                      <Text className="text-base font-bold text-zinc-900">{med.name}</Text>
+                      <Text style={styles.medNameText}>{med.name}</Text>
                     </View>
-                    <View className="px-2.5 py-0.5 rounded-full bg-blue-100">
-                      <Text className="text-xs font-bold text-blue-800">{med.dosage}</Text>
+                    <View style={styles.medDosageBadge}>
+                      <Text style={styles.medDosageText}>{med.dosage}</Text>
                     </View>
                   </View>
 
-                  <Text className="text-xs text-zinc-600 leading-relaxed mb-2">
-                    Số lượng: <Text className="font-bold text-zinc-800">{med.quantity}</Text> •{' '}
-                    {med.instruction}
+                  <Text style={styles.medInstructionText}>
+                    Số lượng: <Text style={{ fontWeight: '800', color: '#0F172A' }}>{med.quantity}</Text> • {med.instruction}
                   </Text>
 
                   {/* Time slots badges */}
-                  <View className="flex-row items-center gap-1.5">
+                  <View style={styles.slotsRow}>
                     {med.timeSlots.map((slot) => {
                       const labels: Record<string, string> = {
                         morning: 'Sáng',
@@ -213,10 +209,8 @@ export function PrescriptionTranslationModal({
                         night: 'Tối',
                       };
                       return (
-                        <View key={slot} className="px-2 py-0.5 rounded-md bg-white border border-slate-200">
-                          <Text className="text-[10px] font-semibold text-slate-700">
-                            {labels[slot] || slot}
-                          </Text>
+                        <View key={slot} style={styles.slotBadge}>
+                          <Text style={styles.slotText}>{labels[slot] || slot}</Text>
                         </View>
                       );
                     })}
@@ -225,27 +219,6 @@ export function PrescriptionTranslationModal({
               ))}
             </View>
           </View>
-
-          {/* Ask AI Doctor Banner */}
-          <Pressable
-            onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-              onClose();
-              if (onOpenChatbot) onOpenChatbot();
-            }}
-            className="flex-row items-center justify-between p-4 rounded-[26px] bg-gradient-to-r from-blue-600 to-indigo-600 bg-blue-600 shadow-md shadow-blue-500/25 active:scale-[0.98]"
-          >
-            <View className="flex-row items-center gap-3">
-              <View className="size-10 items-center justify-center rounded-2xl bg-white/20">
-                <Bot size={22} color="#FFFFFF" />
-              </View>
-              <View>
-                <Text className="text-sm font-bold text-white">Bạn chưa hiểu rõ đơn thuốc này?</Text>
-                <Text className="text-xs text-blue-100">Bấm để chat với Bác Sĩ Dược Sĩ AI ngay</Text>
-              </View>
-            </View>
-            <ArrowRight size={18} color="#FFFFFF" />
-          </Pressable>
         </ScrollView>
 
         {/* Export Success Modal */}
@@ -267,3 +240,314 @@ export function PrescriptionTranslationModal({
     </Modal>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F7FB',
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  headerIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitle: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  headerSub: {
+    fontSize: 11,
+    color: '#059669',
+    fontWeight: '600',
+    marginTop: 1,
+  },
+  closeBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scrollContent: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 40,
+  },
+  actionRow: {
+    flexDirection: 'row',
+    gap: 8,
+    marginBottom: 14,
+  },
+  actionBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: 18,
+    shadowOpacity: 0.2,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 3 },
+  },
+  actionBtnPdf: {
+    backgroundColor: '#0066FE',
+    shadowColor: '#0066FE',
+  },
+  actionBtnDocx: {
+    backgroundColor: '#4F46E5',
+    shadowColor: '#4F46E5',
+  },
+  actionBtnText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  sosActionBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 14,
+    paddingVertical: 13,
+    borderRadius: 18,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  sosActionText: {
+    fontSize: 12.5,
+    fontWeight: '800',
+    color: '#E11D48',
+  },
+  card: {
+    marginBottom: 14,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+  },
+  cardHeaderSmall: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  cardSectionTag: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 6,
+  },
+  confidenceBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+  },
+  confidenceText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#0066FE',
+  },
+  originalImage: {
+    width: '100%',
+    height: 140,
+    borderRadius: 16,
+    backgroundColor: '#F1F5F9',
+  },
+  doctorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  doctorIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doctorName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  hospitalRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    marginTop: 2,
+  },
+  hospitalText: {
+    fontSize: 11.5,
+    color: '#64748B',
+  },
+  diagnosisSection: {
+    paddingTop: 12,
+  },
+  diagnosisBox: {
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  diagnosisText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+  warningCard: {
+    marginBottom: 14,
+    borderRadius: 24,
+    backgroundColor: '#FFFBEB',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  warningTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#92400E',
+    textTransform: 'uppercase',
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#92400E',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  medsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 12,
+  },
+  medsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  medsTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  medsSub: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  medsList: {
+    gap: 10,
+  },
+  medItem: {
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  medItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  medNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  medIndexBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 8,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  medIndexText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1D4ED8',
+  },
+  medNameText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  medDosageBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: '#DBEAFE',
+  },
+  medDosageText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+  medInstructionText: {
+    fontSize: 12,
+    color: '#475569',
+    lineHeight: 18,
+  },
+  slotsRow: {
+    flexDirection: 'row',
+    gap: 6,
+    marginTop: 8,
+  },
+  slotBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  slotText: {
+    fontSize: 10,
+    fontWeight: '700',
+    color: '#475569',
+  },
+});

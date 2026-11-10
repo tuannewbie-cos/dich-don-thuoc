@@ -4,6 +4,7 @@ import { MOCK_PRESCRIPTIONS } from '@/mocks/mockData';
 
 interface PrescriptionState {
   prescriptions: Prescription[];
+  scannedHistory: Prescription[];
   activePrescription: Prescription | null;
   isAnalyzing: boolean;
   analysisStep: number;
@@ -15,12 +16,14 @@ interface PrescriptionState {
   setAnalyzing: (status: boolean) => void;
   setAnalysisStep: (step: number) => void;
   syncPrescriptionToSchedule: (id: string) => boolean;
-  addPrescription: (prescription: Prescription) => void;
+  addScannedPrescription: (prescription: Prescription) => void;
+  clearScannedHistory: () => void;
 }
 
 export const usePrescriptionStore = create<PrescriptionState>((set, get) => ({
   prescriptions: MOCK_PRESCRIPTIONS,
-  activePrescription: MOCK_PRESCRIPTIONS[0],
+  scannedHistory: [], // Ban đầu chưa có đơn nào được quét
+  activePrescription: null, // Ban đầu null
   isAnalyzing: false,
   analysisStep: 0,
   syncedPrescriptionIds: [],
@@ -49,10 +52,14 @@ export const usePrescriptionStore = create<PrescriptionState>((set, get) => ({
     return true;
   },
 
-  addPrescription: (prescription) => {
+  addScannedPrescription: (prescription) => {
     set((state) => ({
-      prescriptions: [prescription, ...state.prescriptions],
+      scannedHistory: [prescription, ...state.scannedHistory.filter((p) => p.id !== prescription.id)],
       activePrescription: prescription,
     }));
+  },
+
+  clearScannedHistory: () => {
+    set({ scannedHistory: [], activePrescription: null });
   },
 }));

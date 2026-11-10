@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { SymptomLog } from '@/types';
 import { MOCK_SYMPTOM_LOGS } from '@/mocks/mockData';
+import { callGeminiAI } from '@/services/gemini';
 import * as Haptics from 'expo-haptics';
 
 export interface ChatMessage {
@@ -14,20 +15,8 @@ const DEFAULT_MESSAGES: ChatMessage[] = [
   {
     id: 'msg_01',
     sender: 'ai',
-    text: 'Xin chào Nguyễn Văn An! Tôi là Trợ Lý Dược Sĩ AI MediScan. Tôi đã nắm rõ đơn thuốc và lịch uống của bạn. Bạn có thắc mắc gì về cách uống, tác dụng phụ hay cần tư vấn triệu chứng không?',
-    time: '08:35',
-  },
-  {
-    id: 'msg_02',
-    sender: 'user',
-    text: 'Uống Clarithromycin có bị đắng miệng không bác sĩ?',
-    time: '08:36',
-  },
-  {
-    id: 'msg_03',
-    sender: 'ai',
-    text: 'Vị đắng miệng là phản ứng phụ rất phổ biến và lành tính của kháng sinh Clarithromycin (do hoạt chất bài tiết một phần qua nước bọt). Bạn yên tâm nhé! Bạn có thể uống nhiều nước lọc, súc miệng sau uống hoặc ngậm kẹo bạc hà không đường để giảm bớt cảm giác này.',
-    time: '08:36',
+    text: 'Xin chào bạn! Tôi là Trợ Lý AI MediScan. Tôi có thể giúp bạn giải đáp thắc mắc về đơn thuốc, cách uống thuốc, các kiêng cữ cần thiết hoặc phản ứng phụ sau khi uống thuốc. Bạn cần tôi hỗ trợ điều gì hôm nay?',
+    time: '08:30',
   },
 ];
 
@@ -35,12 +24,14 @@ interface CompanionState {
   logs: SymptomLog[];
   chatMessages: ChatMessage[];
   isAiTyping: boolean;
+  geminiApiKey: string;
+  setGeminiApiKey: (key: string) => void;
   addSymptomLog: (
     feeling: 'well' | 'moderate' | 'unwell',
     symptoms: string[],
     notes?: string
   ) => void;
-  sendChatMessage: (text: string) => void;
+  sendChatMessage: (text: string) => Promise<void>;
   resetDefault: () => void;
 }
 
@@ -48,6 +39,7 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   logs: MOCK_SYMPTOM_LOGS,
   chatMessages: DEFAULT_MESSAGES,
   isAiTyping: false,
+  geminiApiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
 
   addSymptomLog: (feeling, symptoms, notes) => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -68,7 +60,11 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
     }));
   },
 
-  sendChatMessage: (text) => {
+  setGeminiApiKey: (key: string) => {
+    set({ geminiApiKey: key });
+  },
+
+  sendChatMessage: async (text: string) => {
     if (!text.trim()) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
 
@@ -87,30 +83,15 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
       isAiTyping: true,
     }));
 
-    // Generate intelligent medical response based on user input
-    setTimeout(() => {
-      let reply =
-        'Cảm ơn bạn đã chia sẻ. Đơn thuốc của bạn hiện được thiết kế an toàn. Nếu các triệu chứng kéo dài hoặc nặng hơn, bạn nên liên hệ trực tiếp với bác sĩ kê đơn hoặc gọi hotline y tế 115.';
-      const lower = text.toLowerCase();
-
-      if (lower.includes('quên') || lower.includes('bỏ lỡ')) {
-        reply =
-          'Nếu quên liều thuốc: Hãy uống ngay khi nhớ ra. Tuy nhiên nếu đã gần đến giờ của liều kế tiếp (dưới 2-3 tiếng), hãy bỏ qua liều quên và uống liều tiếp theo đúng lịch. Tuyệt đối không uống gấp đôi liều!';
-      } else if (lower.includes('cà phê') || lower.includes('rượu') || lower.includes('bia') || lower.includes('kiêng')) {
-        reply =
-          'Khuyến cáo y khoa: Tuyệt đối tránh rượu bia trong suốt đợt dùng kháng sinh vì sẽ gây quá tải gan và giảm tác dụng thuốc. Cà phê và trà xanh nên uống cách xa thời điểm uống thuốc ít nhất 2 giờ.';
-      } else if (lower.includes('dị ứng') || lower.includes('phát ban') || lower.includes('ngứa')) {
-        reply =
-          '⚠️ Cảnh báo: Nếu bạn xuất hiện nốt ban đỏ, ngứa ngáy toàn thân hoặc khó thở, hãy tạm ngưng cữ thuốc tiếp theo và liên hệ ngay cơ sở y tế gần nhất để kiểm tra phản ứng dị ứng thuốc.';
-      } else if (lower.includes('đau bao tử') || lower.includes('dạ dày') || lower.includes('buồn nôn')) {
-        reply =
-          'Để giảm cảm giác cồn cào hoặc buồn nôn, hãy đảm bảo bạn luôn uống thuốc sau khi đã ăn no (khoảng 15-20 phút sau bữa ăn chính) và uống kèm 1 cốc nước ấm đầy.';
-      }
+    // Call Gemini API in background without blocking UI
+    try {
+      const apiKey = get().geminiApiKey;
+      const aiReply = await callGeminiAI(text.trim(), apiKey);
 
       const aiMsg: ChatMessage = {
         id: `ai_${Date.now()}`,
         sender: 'ai',
-        text: reply,
+        text: aiReply,
         time: `${new Date().getHours().toString().padStart(2, '0')}:${new Date().getMinutes().toString().padStart(2, '0')}`,
       };
 
@@ -119,12 +100,13 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
         isAiTyping: false,
       }));
       Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-    }, 900);
+    } catch (err) {
+      set({ isAiTyping: false });
+    }
   },
 
   resetDefault: () => {
     set({
-      logs: MOCK_SYMPTOM_LOGS,
       chatMessages: DEFAULT_MESSAGES,
       isAiTyping: false,
     });

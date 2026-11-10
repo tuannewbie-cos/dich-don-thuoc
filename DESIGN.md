@@ -1,68 +1,57 @@
-# DESIGN.md — Quy Chuẩn Thiết Kế MedTech Siêu Tinh Gọn (Medexa Minimal Style)
+# DESIGN.md — Quy Chuẩn Ứng Dụng MediScan AI Siêu Tinh Gọn & Tốc Độ Cao
 
-Tài liệu này chuẩn hóa toàn bộ giao diện của **MediScan (Medexa Style)** theo thiết kế hiện đại nhất, tập trung tối đa vào **1 Nút Scan Trung Tâm** và **Cửa Sổ Chatbot Bác Sĩ Online**.
-
----
-
-## 1. Triết Lý Thiết Kế (Modern MedTech Aesthetic)
-- **Tối giản & Đẳng cấp:** Lấy cảm hứng trực tiếp từ giao diện Medexa iOS:
-  - Nền app: Xám pha xanh dương siêu nhạt `bg-[#F8FAFC]` hoặc `bg-[#F5F7FB]`.
-  - Thẻ card: Trắng tinh khiết `bg-white rounded-[28px] p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100`.
-  - Màu điểm nhấn: **Electric Medical Blue** (`#2563EB`, `#0284C7`).
-- **Thanh Dock Điều Hướng Dưới Cùng (Floating Elevated Dock):**
-  - Thanh tab bar màu trắng bo góc mềm mại.
-  - **Ở CHÍNH GIỮA LÀ NÚT QUÉT SCAN TO NỔI BẬT:** Nút tròn màu xanh dương điện (`size-16`, `-top-5`), đổ bóng nhẹ `shadow-lg shadow-blue-500/35`. Bấm vào sẽ mở luồng Quét Đơn Viết Tay Bác Sĩ & Xem Bản Dịch.
+Tài liệu này quy chuẩn giao diện và kiến trúc kỹ thuật của **MediScan AI** sau khi tối ưu loại bỏ hoàn toàn hiện tượng lag/đơ trên iOS, tinh gọn màn hình chính và tích hợp Google AI Studio Gemini API.
 
 ---
 
-## 2. Các Thành Phần Trọng Tâm Trên Giao Diện Chính
-
-### 2.1. Thanh Tiêu Đề & Lời Chào (Header & Greeting)
-- Top Bar:
-  - Logo thương hiệu: Icon chữ thập y tế xanh + chữ **MediScan** (hoặc **Medexa**).
-  - Phía bên phải: Avatar người dùng tròn, chuông thông báo (Bell with red dot) và **Nút Gọi Khẩn Cấp 115** màu đỏ/hồng nhẹ (`📞 115`).
-- Tiêu đề phong cách Medexa:
-  - Dòng trên: `Hi Nguyễn Văn An` (text-zinc-500).
-  - Dòng dưới: `Good ` + `<Text className="text-blue-600 font-extrabold">Morning</Text>` (hoặc `Sức Khỏe ` + `<Text className="text-blue-600 font-extrabold">Hôm Nay</Text>`).
-- Thanh Pills Lọc Ngang:
-  - Pill màu đen active: `[Tất cả / Overview]` (nền đen `bg-zinc-900 text-white rounded-full`).
-  - Pills phụ: `[Bản Dịch Đơn]`, `[Lịch Uống]`, `[Bác Sĩ]`.
-  - Nút tìm kiếm tròn màu xanh dương nhạt bên phải `[🔍]`.
-
-### 2.2. Khối Điểm Sức Khỏe & An Toàn Thuốc (Health Score Curve)
-- Thẻ lớn cong bo tròn `rounded-[28px]`:
-  - Tiêu đề: `Chỉ Số Đơn Thuốc: 95/100 ↑ 12% An toàn`.
-  - Biểu đồ đường cong uốn lượn màu xanh thanh lịch (Vector curve line) thể hiện tiến trình điều trị và kiểm định an toàn dược học.
-
-### 2.3. Hàng Thẻ Chỉ Số Kép (Two Metrics Row)
-- Thẻ trái: `Nhịp Tim / 110 bpm / Bình thường` kèm đồ thị nhịp tim mini.
-- Thẻ phải: `Cữ Thuốc / 3/4 Đã uống / Tốt` kèm biểu đồ cột mini.
-
-### 2.4. Cửa Sổ Chatbot Bác Sĩ Online (AI Doctor Window)
-- Nằm nổi bật ở nửa trên giao diện:
-  - Thẻ `AI Health Insights / Bác Sĩ Trực Tuyến` với avatar Bác Sĩ / Robot 3D thân thiện.
-  - Khung hội thoại trực tuyến giải thích đơn thuốc, kiêng cữ, nhắc lịch.
-  - Bấm vào mở hộp thoại chat 2 chiều thời gian thực.
+## 1. Triết Lý Thiết Kế & Chống Lag (Zero-Lag Performance)
+- **Tuyệt đối cấm lồng ghép nhiều Modal (No Nested Modals):** Không bao giờ mount nhiều thẻ `<Modal>` lồng nhau trên iOS vì UIKit sẽ xung đột và làm đơ toàn bộ touch event. Mọi modal (Scanner, Bản Dịch, 115 SOS) phải được quản lý đơn lẻ và mượt mà.
+- **Phong cách thị giác (Apple MedTech Minimal):**
+  - Nền app: Xám sáng `#F5F7FB`.
+  - Thẻ card: Trắng tinh khiết `#FFFFFF`, bo góc `borderRadius: 26`, viền siêu mỏng `borderWidth: 1, borderColor: '#F1F5F9'`.
+  - Màu điểm nhấn: **Electric Blue** (`#0066FE`), màu cấp cứu **Rose Red** (`#E11D48`).
+- **Resilient Styling:** 100% linh kiện sử dụng đồng thời `StyleSheet.create` chuẩn React Native kết hợp NativeWind để đảm bảo không phụ thuộc vào cache của Metro bundler.
 
 ---
 
-## 3. Luồng Quét & Bản Dịch Đơn Thuốc (Centered Scan Flow)
-- Bấm vào **Nút Scan Tròn Trung Tâm**:
-  - Mở camera scanner / bộ quét mô phỏng AI OCR chữ bác sĩ.
-  - **Bản Dịch Đơn Thuốc (Prescription Translation):**
-    - Chuyển dịch toàn bộ chữ viết tay bác sĩ sang văn bản chuẩn y khoa:
-      - Bác sĩ kê đơn & Bệnh viện.
-      - Chẩn đoán chi tiết.
-      - Danh sách thuốc: Hoạt chất, hàm lượng, số lượng, liều dùng theo bữa.
-      - Cảnh báo tương tác thuốc & kiêng khem.
-    - **2 Nút Xuất File Bắt Buộc:**
-      - **[📄 Xuất PDF]**: Sinh file PDF bản dịch rõ nét gửi in hoặc lưu trữ.
-      - **[📝 Xuất DOCX]**: Sinh file Word bản dịch phục vụ chỉnh sửa.
-    - **Nút Cấp Cứu 115:** Gọi trực tiếp tổng đài 115 khi bệnh nhân có biểu hiện sốc phản vệ hoặc nguy kịch.
+## 2. Cấu Trúc Các Màn Hình Chính
+
+### 🏠 2.1. Màn Hình Trang Chủ (Home Screen — `app/(tabs)/index.tsx`)
+- **Lời chào tinh gọn:** `Chào bạn,` $\rightarrow$ `Chúc bạn một ngày tốt lành` (Tuyệt đối không hiển thị tên riêng bệnh nhân).
+- **Mô tả ứng dụng quét chữ bác sĩ:**
+  - Khối Hero: Giới thiệu công nghệ AI Vision đọc chữ viết tay bác sĩ, dịch tự động sang văn bản chuẩn y khoa.
+  - Nút bấm chính: **`[Quét Đơn Thuốc Ngay]`** (mở trực tiếp camera quét).
+  - Quy trình 3 bước trực quan: Chụp đơn thuốc $\rightarrow$ AI tự động dịch $\rightarrow$ Xuất file PDF/DOCX & hỏi đáp AI.
+- **Đã loại bỏ:** Không hiển thị nhịp tim, giấc ngủ, health score để tránh rối mắt và chống giật lag.
 
 ---
 
-## 4. Phân Công Đồng Bộ Trên 3 Nhánh
-- **Nhánh `1` (Scan & Bản Dịch + Xuất PDF/DOCX):** Chịu trách nhiệm nút Scan trung tâm, màn hình quét OCR và xuất file PDF/DOCX.
-- **Nhánh `2` (Giao Diện Chính Medexa Style):** Chịu trách nhiệm toàn bộ Dashboard màn hình chính theo hình mẫu (Header, Curve Card, Metrics, 115 Action).
-- **Nhánh `3` (Cửa Sổ Chatbot Bác Sĩ Online & Hotline 115):** Chịu trách nhiệm Cửa sổ Chatbot Bác sĩ Online và kết nối khẩn cấp 115.
+### 🔍 2.2. Nút Scan Tròn Trung Tâm (Bottom Floating Scan Button)
+- Nằm ở chính giữa thanh Tab Bar: Nút tròn màu xanh dương điện (`#0066FE`), nổi cao (`marginTop: -22`), viền trắng 4px, đổ bóng xanh với chữ **Scan**.
+- **Luồng hoạt động:**
+  - Bấm Scan $\rightarrow$ Mở khung quét đơn thuốc $\rightarrow$ Quét xong **lập tức hiển thị Bản Dịch Đơn Thuốc** (Prescription Translation).
+  - Đơn thuốc vừa quét tự động được lưu vào lịch sử.
+
+---
+
+### 📄 2.3. Mục Thứ 2: Bản Dịch & Lịch Sử Đơn Thuốc (`app/(tabs)/two.tsx`)
+- **Khi chưa quét đơn nào (`scannedHistory.length === 0`):**
+  - Hiển thị thông báo: **"Bạn chưa quét đơn thuốc nào"**.
+  - Mô tả hướng dẫn và nút CTA: **`[Quét Đơn Thuốc Đầu Tiên]`**.
+- **Sau khi đã quét:**
+  - Hiển thị danh sách các đơn thuốc đã quét.
+  - Bảng dịch chuẩn y khoa từng loại thuốc (hàm lượng, cách dùng theo cữ, cảnh báo tương tác).
+  - **2 Nút Xuất File:** `[📄 Xuất PDF]` và `[📝 Xuất DOCX]`.
+  - Nút gọi cấp cứu **`[📞 115]`**.
+
+---
+
+### 🤖 2.4. Mục Thứ 3: Trợ Lý AI (Google AI Studio Gemini Chatbot — `app/(tabs)/three.tsx`)
+- **Giao diện chuẩn AI Chatbot hiện đại (phong cách ChatGPT):**
+  - Khung bong bóng chat thời gian thực.
+  - Gợi ý câu hỏi nhanh (Kiêng cữ, quên uống thuốc, buồn nôn, dị ứng...).
+  - Thanh nhập tin nhắn bo tròn mềm mại ở dưới cùng.
+- **Tích hợp Google AI Studio API:**
+  - Tự động gọi mô hình `gemini-1.5-flash` qua endpoint Google AI Studio.
+  - Nút biểu tượng chìa khóa `[🔑]` ở góc trên cho phép người dùng dán và tự động cập nhật API Key của riêng mình.
+  - Tích hợp động cơ trả lời dự phòng thông minh (Offline Fallback Engine) đảm bảo không bao giờ bị đơ hay báo lỗi mạng khi demo.

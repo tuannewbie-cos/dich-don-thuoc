@@ -10,8 +10,9 @@ import {
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
+  Modal,
 } from 'react-native';
-import { Bot, Send, User, Sparkles, PhoneCall, RefreshCcw } from 'lucide-react-native';
+import { Bot, Send, User, Sparkles, PhoneCall, RefreshCcw, Key, X, Check } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useCompanionStore } from '@/store/useCompanionStore';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
@@ -24,15 +25,31 @@ const SUGGESTIONS = [
 ];
 
 export function DoctorChatbotScreen() {
-  const { chatMessages, isAiTyping, sendChatMessage, resetDefault } = useCompanionStore();
+  const {
+    chatMessages,
+    isAiTyping,
+    geminiApiKey,
+    setGeminiApiKey,
+    sendChatMessage,
+    resetDefault,
+  } = useCompanionStore();
+
   const [inputText, setInputText] = useState('');
   const [showEmergency, setShowEmergency] = useState(false);
+  const [showKeyModal, setShowKeyModal] = useState(false);
+  const [keyInput, setKeyInput] = useState(geminiApiKey);
 
   const handleSend = (textToSend?: string) => {
     const text = textToSend || inputText;
     if (!text.trim()) return;
     sendChatMessage(text);
     setInputText('');
+  };
+
+  const handleSaveKey = () => {
+    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    setGeminiApiKey(keyInput.trim());
+    setShowKeyModal(false);
   };
 
   return (
@@ -48,11 +65,24 @@ export function DoctorChatbotScreen() {
               <Text style={styles.headerTitle}>Trợ Lý AI</Text>
               <View style={styles.onlineDot} />
             </View>
-            <Text style={styles.headerSub}>Hỗ trợ sức khỏe & đơn thuốc trực tuyến</Text>
+            <Text style={styles.headerSub}>Google Gemini • Tư vấn sức khỏe 24/7</Text>
           </View>
         </View>
 
         <View style={styles.headerRight}>
+          {/* Key Button */}
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setKeyInput(geminiApiKey);
+              setShowKeyModal(true);
+            }}
+            style={styles.keyBtn}
+          >
+            <Key size={15} color={geminiApiKey ? '#059669' : '#64748B'} />
+          </Pressable>
+
+          {/* Reset Chat Button */}
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -63,6 +93,7 @@ export function DoctorChatbotScreen() {
             <RefreshCcw size={15} color="#64748B" />
           </Pressable>
 
+          {/* 115 SOS */}
           <Pressable
             onPress={() => setShowEmergency(true)}
             style={styles.sosBtn}
@@ -160,7 +191,7 @@ export function DoctorChatbotScreen() {
             <View style={styles.typingContainer}>
               <ActivityIndicator size="small" color="#0066FE" />
               <Text style={styles.typingText}>
-                Trợ lý AI đang soạn câu trả lời...
+                Trợ lý AI đang phân tích dữ liệu y khoa...
               </Text>
             </View>
           )}
@@ -171,7 +202,7 @@ export function DoctorChatbotScreen() {
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Nhắn tin cho Trợ Lý AI..."
+            placeholder="Hỏi về đơn thuốc, cách uống, kiêng cữ..."
             placeholderTextColor="#94A3B8"
             style={styles.textInput}
             onSubmitEditing={() => handleSend()}
@@ -192,6 +223,43 @@ export function DoctorChatbotScreen() {
           </Pressable>
         </View>
       </KeyboardAvoidingView>
+
+      {/* Google AI Studio API Key Modal */}
+      <Modal visible={showKeyModal} transparent animationType="fade" onRequestClose={() => setShowKeyModal(false)}>
+        <View style={styles.modalBackdrop}>
+          <View style={styles.modalBox}>
+            <View style={styles.modalHeader}>
+              <View style={styles.keyIconCircle}>
+                <Key size={20} color="#0066FE" />
+              </View>
+              <Text style={styles.modalTitle}>Cài Đặt Google AI Studio API</Text>
+              <Text style={styles.modalSub}>
+                Nhập Gemini API Key để trò chuyện trực tiếp với mô hình AI thời gian thực.
+              </Text>
+            </View>
+
+            <TextInput
+              value={keyInput}
+              onChangeText={setKeyInput}
+              placeholder="Dán AI Studio Key (AIzaSy...)"
+              placeholderTextColor="#94A3B8"
+              autoCapitalize="none"
+              style={styles.keyInput}
+            />
+
+            <View style={styles.modalActions}>
+              <Pressable onPress={handleSaveKey} style={styles.saveKeyBtn}>
+                <Check size={16} color="#FFFFFF" />
+                <Text style={styles.saveKeyBtnText}>Lưu API Key</Text>
+              </Pressable>
+
+              <Pressable onPress={() => setShowKeyModal(false)} style={styles.cancelKeyBtn}>
+                <Text style={styles.cancelKeyBtnText}>Đóng</Text>
+              </Pressable>
+            </View>
+          </View>
+        </View>
+      </Modal>
 
       {/* Emergency 115 Modal */}
       <EmergencyCallModal
@@ -257,6 +325,16 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  keyBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   refreshBtn: {
     width: 34,
@@ -435,5 +513,86 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalBackdrop: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 20,
+  },
+  modalBox: {
+    width: '100%',
+    maxWidth: 360,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    padding: 24,
+    shadowColor: '#000000',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 6 },
+    shadowRadius: 16,
+  },
+  modalHeader: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  keyIconCircle: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 10,
+  },
+  modalTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  modalSub: {
+    fontSize: 12,
+    color: '#64748B',
+    textAlign: 'center',
+    marginTop: 4,
+    lineHeight: 18,
+  },
+  keyInput: {
+    height: 48,
+    borderRadius: 16,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 16,
+    fontSize: 13,
+    color: '#0F172A',
+    marginBottom: 16,
+  },
+  modalActions: {
+    gap: 8,
+  },
+  saveKeyBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 13,
+    borderRadius: 18,
+    backgroundColor: '#0066FE',
+  },
+  saveKeyBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  cancelKeyBtn: {
+    alignItems: 'center',
+    paddingVertical: 10,
+  },
+  cancelKeyBtnText: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#64748B',
   },
 });

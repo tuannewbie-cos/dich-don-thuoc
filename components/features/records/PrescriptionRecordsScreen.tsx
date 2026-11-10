@@ -6,41 +6,45 @@ import {
   Pressable,
   SafeAreaView,
   StyleSheet,
-  Platform,
 } from 'react-native';
 import {
   FileText,
   FileDown,
   PhoneCall,
-  Bot,
   Stethoscope,
-  Building2,
-  Calendar,
   Pill,
-  Sparkles,
-  ChevronRight,
   ShieldAlert,
+  ScanLine,
+  FileQuestion,
+  Sparkles,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
 import { ExportSuccessModal } from '@/components/ui/ExportSuccessModal';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
-import { DoctorChatbotModal } from '@/components/features/companion/DoctorChatbotModal';
 import { Prescription } from '@/types';
+import { useRouter } from 'expo-router';
 
 export function PrescriptionRecordsScreen() {
-  const { prescriptions, activePrescription, setActivePrescription } = usePrescriptionStore();
-  const [selectedRx, setSelectedRx] = useState<Prescription>(activePrescription || prescriptions[0]);
+  const router = useRouter();
+  const { scannedHistory, openScanner, clearScannedHistory } = usePrescriptionStore();
+  const [selectedRx, setSelectedRx] = useState<Prescription | null>(scannedHistory[0] || null);
   const [exportFormat, setExportFormat] = useState<'PDF' | 'DOCX' | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
-  const [showChatbot, setShowChatbot] = useState(false);
+
+  // Sync selectedRx if scannedHistory updates
+  const activeRx = selectedRx && scannedHistory.some((p) => p.id === selectedRx.id)
+    ? selectedRx
+    : scannedHistory[0] || null;
 
   const handleExport = (format: 'PDF' | 'DOCX') => {
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
     setExportFormat(format);
   };
 
-  const fileName = `BanDich_DonThuoc_${selectedRx.id}.${exportFormat?.toLowerCase() || 'pdf'}`;
+  const fileName = activeRx
+    ? `BanDich_DonThuoc_${activeRx.id}.${exportFormat?.toLowerCase() || 'pdf'}`
+    : '';
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -53,7 +57,7 @@ export function PrescriptionRecordsScreen() {
           <View style={styles.headerTopRow}>
             <View style={styles.badgeTop}>
               <FileText size={13} color="#0066FE" />
-              <Text style={styles.badgeTopText}>BẢN DỊCH CHỮ BÁC SĨ</Text>
+              <Text style={styles.badgeTopText}>LỊCH SỬ BẢN DỊCH</Text>
             </View>
 
             {/* Quick 115 SOS */}
@@ -62,162 +66,187 @@ export function PrescriptionRecordsScreen() {
               style={styles.sosButton}
             >
               <PhoneCall size={12} color="#E11D48" />
-              <Text style={styles.sosText}>115 Cấp Cứu</Text>
+              <Text style={styles.sosText}>115</Text>
             </Pressable>
           </View>
 
           <Text style={styles.title}>Bản Dịch Đơn Thuốc</Text>
           <Text style={styles.subTitle}>
-            Đã dịch tự động từ chữ viết tay & lưu trữ chuẩn y khoa
+            Xem lại các đơn thuốc đã quét và xuất file PDF / DOCX
           </Text>
         </View>
 
-        {/* 2 Big Export Buttons (PDF & DOCX) */}
-        <View style={styles.exportRow}>
-          <Pressable
-            onPress={() => handleExport('PDF')}
-            style={[styles.exportBtn, styles.exportBtnPdf]}
-          >
-            <FileDown size={18} color="#FFFFFF" strokeWidth={2.4} />
-            <Text style={styles.exportBtnText}>Xuất File PDF</Text>
-          </Pressable>
+        {/* IF USER HAS NOT SCANNED ANY PRESCRIPTION YET */}
+        {scannedHistory.length === 0 ? (
+          <View style={styles.emptyContainer}>
+            <View style={styles.emptyIconBox}>
+              <FileQuestion size={44} color="#94A3B8" strokeWidth={1.5} />
+            </View>
+            <Text style={styles.emptyTitle}>Bạn chưa quét đơn thuốc nào</Text>
+            <Text style={styles.emptySub}>
+              Hãy chụp hoặc tải ảnh đơn thuốc viết tay của bác sĩ để hệ thống tự động bóc tách và dịch sang văn bản in tại đây.
+            </Text>
 
-          <Pressable
-            onPress={() => handleExport('DOCX')}
-            style={[styles.exportBtn, styles.exportBtnDocx]}
-          >
-            <FileDown size={18} color="#FFFFFF" strokeWidth={2.4} />
-            <Text style={styles.exportBtnText}>Xuất File DOCX</Text>
-          </Pressable>
-        </View>
-
-        {/* Prescription Switcher Pills */}
-        <View style={styles.switcherContainer}>
-          <Text style={styles.sectionLabel}>Chọn đơn thuốc cần xem / xuất:</Text>
-          <View style={styles.switcherRow}>
-            {prescriptions.map((rx) => {
-              const isSelected = selectedRx.id === rx.id;
-              return (
-                <Pressable
-                  key={rx.id}
-                  onPress={() => {
-                    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                    setSelectedRx(rx);
-                    setActivePrescription(rx);
-                  }}
-                  style={[
-                    styles.switcherCard,
-                    isSelected ? styles.switcherCardActive : styles.switcherCardInactive,
-                  ]}
-                >
-                  <Text
-                    style={[
-                      styles.switcherDiagnosis,
-                      { color: isSelected ? '#0066FE' : '#334155' },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {rx.diagnosis}
-                  </Text>
-                  <Text style={styles.switcherDoctor}>{rx.doctorName}</Text>
-                </Pressable>
-              );
-            })}
+            <Pressable
+              onPress={() => {
+                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                openScanner();
+              }}
+              style={styles.emptyScanBtn}
+            >
+              <ScanLine size={18} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.emptyScanBtnText}>Quét Đơn Thuốc Đầu Tiên</Text>
+            </Pressable>
           </View>
-        </View>
+        ) : (
+          /* IF USER HAS SCANNED PRESCRIPTIONS */
+          <>
+            {/* 2 Big Export Buttons (PDF & DOCX) */}
+            <View style={styles.exportRow}>
+              <Pressable
+                onPress={() => handleExport('PDF')}
+                style={[styles.exportBtn, styles.exportBtnPdf]}
+              >
+                <FileDown size={18} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.exportBtnText}>Xuất File PDF</Text>
+              </Pressable>
 
-        {/* Prescription Metadata Card */}
-        <View style={styles.card}>
-          <View style={styles.doctorHeader}>
-            <View style={styles.doctorIconBox}>
-              <Stethoscope size={22} color="#0066FE" />
+              <Pressable
+                onPress={() => handleExport('DOCX')}
+                style={[styles.exportBtn, styles.exportBtnDocx]}
+              >
+                <FileDown size={18} color="#FFFFFF" strokeWidth={2.4} />
+                <Text style={styles.exportBtnText}>Xuất File DOCX</Text>
+              </Pressable>
             </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.doctorName}>{selectedRx.doctorName}</Text>
-              <Text style={styles.hospitalName}>{selectedRx.hospital}</Text>
-            </View>
-          </View>
 
-          <View style={styles.diagnosisSection}>
-            <Text style={styles.sectionLabel}>Chẩn Đoán Lâm Sàng</Text>
-            <View style={styles.diagnosisBox}>
-              <Text style={styles.diagnosisText}>{selectedRx.diagnosis}</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Safety Warnings Banner */}
-        {selectedRx.safetyNotes && selectedRx.safetyNotes.length > 0 && (
-          <View style={styles.warningCard}>
-            <View style={styles.warningHeader}>
-              <ShieldAlert size={18} color="#D97706" />
-              <Text style={styles.warningTitle}>Lưu Ý Dược Học & Cảnh Báo An Toàn</Text>
-            </View>
-            {selectedRx.safetyNotes.map((note, idx) => (
-              <Text key={idx} style={styles.warningText}>
-                • {note}
+            {/* Prescription Switcher Pills */}
+            <View style={styles.switcherContainer}>
+              <Text style={styles.sectionLabel}>
+                Danh sách đơn đã quét ({scannedHistory.length}):
               </Text>
-            ))}
-          </View>
-        )}
-
-        {/* Translated Medicine Items */}
-        <View style={styles.card}>
-          <View style={styles.medsHeader}>
-            <View style={styles.medsHeaderLeft}>
-              <Pill size={18} color="#0066FE" />
-              <Text style={styles.medsTitle}>
-                Thuốc Đã Dịch ({selectedRx.medications.length} loại)
-              </Text>
+              <View style={styles.switcherRow}>
+                {scannedHistory.map((rx) => {
+                  const isSelected = activeRx?.id === rx.id;
+                  return (
+                    <Pressable
+                      key={rx.id}
+                      onPress={() => {
+                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        setSelectedRx(rx);
+                      }}
+                      style={[
+                        styles.switcherCard,
+                        isSelected ? styles.switcherCardActive : styles.switcherCardInactive,
+                      ]}
+                    >
+                      <Text
+                        style={[
+                          styles.switcherDiagnosis,
+                          { color: isSelected ? '#0066FE' : '#334155' },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {rx.diagnosis}
+                      </Text>
+                      <Text style={styles.switcherDoctor}>{rx.doctorName}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
             </View>
-            <Text style={styles.medsSub}>Chuẩn GPP</Text>
-          </View>
 
-          <View style={styles.medsList}>
-            {selectedRx.medications.map((med, index) => (
-              <View key={med.id || index} style={styles.medItem}>
-                <View style={styles.medItemHeader}>
-                  <View style={styles.medNameRow}>
-                    <View style={styles.medIndexBadge}>
-                      <Text style={styles.medIndexText}>{index + 1}</Text>
+            {/* Active Prescription Details */}
+            {activeRx && (
+              <>
+                {/* Doctor & Hospital Info */}
+                <View style={styles.card}>
+                  <View style={styles.doctorHeader}>
+                    <View style={styles.doctorIconBox}>
+                      <Stethoscope size={22} color="#0066FE" />
                     </View>
-                    <Text style={styles.medNameText}>{med.name}</Text>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.doctorName}>{activeRx.doctorName}</Text>
+                      <Text style={styles.hospitalName}>{activeRx.hospital}</Text>
+                    </View>
                   </View>
-                  <View style={styles.medDosageBadge}>
-                    <Text style={styles.medDosageText}>{med.dosage}</Text>
+
+                  <View style={styles.diagnosisSection}>
+                    <Text style={styles.sectionLabel}>Chẩn Đoán Lâm Sàng</Text>
+                    <View style={styles.diagnosisBox}>
+                      <Text style={styles.diagnosisText}>{activeRx.diagnosis}</Text>
+                    </View>
                   </View>
                 </View>
 
-                <Text style={styles.medInstructionText}>
-                  Số lượng: <Text style={{ fontWeight: '800', color: '#0F172A' }}>{med.quantity}</Text> • {med.instruction}
-                </Text>
-              </View>
-            ))}
-          </View>
-        </View>
+                {/* Safety Warnings Banner */}
+                {activeRx.safetyNotes && activeRx.safetyNotes.length > 0 && (
+                  <View style={styles.warningCard}>
+                    <View style={styles.warningHeader}>
+                      <ShieldAlert size={18} color="#D97706" />
+                      <Text style={styles.warningTitle}>Lưu Ý Dược Học & Cảnh Báo An Toàn</Text>
+                    </View>
+                    {activeRx.safetyNotes.map((note, idx) => (
+                      <Text key={idx} style={styles.warningText}>
+                        • {note}
+                      </Text>
+                    ))}
+                  </View>
+                )}
 
-        {/* Chat with AI Doctor Banner */}
-        <View style={styles.chatBannerContainer}>
-          <Pressable
-            onPress={() => setShowChatbot(true)}
-            style={styles.chatBanner}
-          >
-            <View style={styles.chatBannerLeft}>
-              <View style={styles.chatBannerIcon}>
-                <Bot size={22} color="#FFFFFF" />
-              </View>
-              <View>
-                <Text style={styles.chatBannerTitle}>Hỏi Bác Sĩ AI Về Đơn Này</Text>
-                <Text style={styles.chatBannerSub}>Giải thích chi tiết tác dụng phụ & kiêng khem</Text>
-              </View>
-            </View>
-            <ChevronRight size={18} color="#FFFFFF" />
-          </Pressable>
-        </View>
+                {/* Translated Medicine Items */}
+                <View style={styles.card}>
+                  <View style={styles.medsHeader}>
+                    <View style={styles.medsHeaderLeft}>
+                      <Pill size={18} color="#0066FE" />
+                      <Text style={styles.medsTitle}>
+                        Thuốc Đã Dịch ({activeRx.medications.length} loại)
+                      </Text>
+                    </View>
+                    <Text style={styles.medsSub}>Chuẩn GPP</Text>
+                  </View>
+
+                  <View style={styles.medsList}>
+                    {activeRx.medications.map((med, index) => (
+                      <View key={med.id || index} style={styles.medItem}>
+                        <View style={styles.medItemHeader}>
+                          <View style={styles.medNameRow}>
+                            <View style={styles.medIndexBadge}>
+                              <Text style={styles.medIndexText}>{index + 1}</Text>
+                            </View>
+                            <Text style={styles.medNameText}>{med.name}</Text>
+                          </View>
+                          <View style={styles.medDosageBadge}>
+                            <Text style={styles.medDosageText}>{med.dosage}</Text>
+                          </View>
+                        </View>
+
+                        <Text style={styles.medInstructionText}>
+                          Số lượng: <Text style={{ fontWeight: '800', color: '#0F172A' }}>{med.quantity}</Text> • {med.instruction}
+                        </Text>
+                      </View>
+                    ))}
+                  </View>
+                </View>
+
+                {/* Scan Another Prescription CTA */}
+                <View style={{ paddingHorizontal: 16, marginBottom: 14 }}>
+                  <Pressable
+                    onPress={() => openScanner()}
+                    style={styles.scanMoreBtn}
+                  >
+                    <ScanLine size={16} color="#0066FE" />
+                    <Text style={styles.scanMoreBtnText}>Quét Thêm Đơn Thuốc Khác</Text>
+                  </Pressable>
+                </View>
+              </>
+            )}
+          </>
+        )}
       </ScrollView>
 
       {/* Export Success Modal */}
-      {exportFormat && (
+      {exportFormat && activeRx && (
         <ExportSuccessModal
           visible={!!exportFormat}
           format={exportFormat}
@@ -230,12 +259,6 @@ export function PrescriptionRecordsScreen() {
       <EmergencyCallModal
         visible={showEmergency}
         onClose={() => setShowEmergency(false)}
-      />
-
-      {/* Chatbot Modal */}
-      <DoctorChatbotModal
-        visible={showChatbot}
-        onClose={() => setShowChatbot(false)}
       />
     </SafeAreaView>
   );
@@ -300,6 +323,61 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#64748B',
     marginTop: 2,
+  },
+  emptyContainer: {
+    marginHorizontal: 16,
+    marginTop: 40,
+    padding: 32,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+  },
+  emptyIconBox: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 16,
+  },
+  emptyTitle: {
+    fontSize: 18,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  emptySub: {
+    fontSize: 13,
+    color: '#64748B',
+    textAlign: 'center',
+    lineHeight: 20,
+    marginTop: 8,
+    marginBottom: 24,
+  },
+  emptyScanBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 24,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: '#0066FE',
+    shadowColor: '#0066FE',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 8,
+  },
+  emptyScanBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   exportRow: {
     flexDirection: 'row',
@@ -534,43 +612,20 @@ const styles = StyleSheet.create({
     color: '#475569',
     lineHeight: 18,
   },
-  chatBannerContainer: {
-    paddingHorizontal: 16,
-    marginBottom: 14,
-  },
-  chatBanner: {
+  scanMoreBtn: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    padding: 16,
-    borderRadius: 24,
-    backgroundColor: '#0066FE',
-    shadowColor: '#0066FE',
-    shadowOpacity: 0.3,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 10,
-  },
-  chatBannerLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-  },
-  chatBannerIcon: {
-    width: 42,
-    height: 42,
-    borderRadius: 16,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 20,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
   },
-  chatBannerTitle: {
-    fontSize: 14,
+  scanMoreBtnText: {
+    fontSize: 13,
     fontWeight: '800',
-    color: '#FFFFFF',
-  },
-  chatBannerSub: {
-    fontSize: 11,
-    color: '#DBEAFE',
-    marginTop: 2,
+    color: '#0066FE',
   },
 });
