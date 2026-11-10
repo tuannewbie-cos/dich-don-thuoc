@@ -1,6 +1,6 @@
 import React from 'react';
-import { MedicationSchedule } from '@/components/features/schedule/MedicationSchedule';
+import { PrescriptionRecordsScreen } from '@/components/features/records/PrescriptionRecordsScreen';
 
 export default function TabTwoScreen() {
-  return <MedicationSchedule />;
+  return <PrescriptionRecordsScreen />;
 }

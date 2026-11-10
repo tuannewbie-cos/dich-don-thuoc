@@ -1,127 +1,68 @@
-# DESIGN.md — Hệ Thống Thiết Kế UI Chuẩn Cho Toàn Dự Án (Apple Fluid Native)
+# DESIGN.md — Quy Chuẩn Thiết Kế MedTech Siêu Tinh Gọn (Medexa Minimal Style)
 
-Tài liệu này quy chuẩn toàn bộ Design System của ứng dụng **MediScan AI**. Mọi thành viên và các agent thi công nhánh **`1`**, **`2`**, và **`3`** **BẮT BUỘC TUÂN THỦ 100%** để đảm bảo ứng dụng có giao diện đồng nhất, cao cấp chuẩn Apple iOS.
-
----
-
-## 1. Triết Lý Thiết Kế (Apple Fluid Native)
-- **Phong cách:** Apple Light Grouped Mode (tương tự Apple Health, Settings, App Store).
-- **Cảm giác tiếp xúc (Direct Touch):** Nút bấm và thẻ tương tác phải có độ nảy vật lý (`active:scale-[0.98] active:opacity-90`) và phản hồi xúc giác Taptic Engine thông qua `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)`.
-- **Phân tầng bề mặt (Surface Hierarchy):**
-  - **Base Background:** `#F2F2F7` (System Grouped Background - xám nhạt dịu mắt). Tuyệt đối **không** dùng `#FFFFFF` làm nền màn hình.
-  - **Cards & Surfaces:** `#FFFFFF` (Trắng tinh khiết) nổi trên nền xám, bo góc `rounded-3xl` (24px), viền mỏng `border border-slate-200/60`, đổ bóng nhẹ `shadow-sm`.
+Tài liệu này chuẩn hóa toàn bộ giao diện của **MediScan (Medexa Style)** theo thiết kế hiện đại nhất, tập trung tối đa vào **1 Nút Scan Trung Tâm** và **Cửa Sổ Chatbot Bác Sĩ Online**.
 
 ---
 
-## 2. Bảng Màu Chuẩn (Color Palette & Tokens)
-
-| Token | Class Tailwind | Mã HEX / Công Dụng |
-| :--- | :--- | :--- |
-| **Canvas** | `bg-[#F2F2F7]` | `#F2F2F7` — Nền chính toàn bộ app |
-| **Card Surface** | `bg-white` | `#FFFFFF` — Bề mặt thẻ, container |
-| **Card Border** | `border-slate-200/60` | Viền siêu mỏng tạo chiều sâu |
-| **Primary Accent** | `bg-blue-600 text-blue-600` | `#2563EB` — Apple System Blue (CTA, tab active, trạng thái chính) |
-| **Accent Light** | `bg-blue-50 text-blue-700` | Nền icon / badge công nghệ cao |
-| **Health / Success** | `bg-emerald-50 text-emerald-700 border-emerald-200/60` | Đã uống thuốc, đơn thuốc đã thẩm định, trạng thái an toàn |
-| **Warning / Alert** | `bg-amber-50 text-amber-700 border-amber-200/60` | Cảnh báo tương tác thuốc, lưu ý kiêng khem, tác dụng phụ |
-| **Danger / Stop** | `bg-rose-50 text-rose-700 border-rose-200/60` | Thuốc chống chỉ định, dị ứng nặng, báo cáo triệu chứng xấu |
-| **Title Text** | `text-zinc-900` | Tiêu đề lớn, chữ đậm nổi bật |
-| **Body Text** | `text-zinc-800` / `text-zinc-700` | Nội dung thuốc, hướng dẫn liều dùng |
-| **Caption / Muted** | `text-zinc-400` / `text-zinc-500` | Ngày tháng, tên bệnh viện, số liều |
+## 1. Triết Lý Thiết Kế (Modern MedTech Aesthetic)
+- **Tối giản & Đẳng cấp:** Lấy cảm hứng trực tiếp từ giao diện Medexa iOS:
+  - Nền app: Xám pha xanh dương siêu nhạt `bg-[#F8FAFC]` hoặc `bg-[#F5F7FB]`.
+  - Thẻ card: Trắng tinh khiết `bg-white rounded-[28px] p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100`.
+  - Màu điểm nhấn: **Electric Medical Blue** (`#2563EB`, `#0284C7`).
+- **Thanh Dock Điều Hướng Dưới Cùng (Floating Elevated Dock):**
+  - Thanh tab bar màu trắng bo góc mềm mại.
+  - **Ở CHÍNH GIỮA LÀ NÚT QUÉT SCAN TO NỔI BẬT:** Nút tròn màu xanh dương điện (`size-16`, `-top-5`), đổ bóng nhẹ `shadow-lg shadow-blue-500/35`. Bấm vào sẽ mở luồng Quét Đơn Viết Tay Bác Sĩ & Xem Bản Dịch.
 
 ---
 
-## 3. Hệ Thống Chữ (Typography Hierarchy)
+## 2. Các Thành Phần Trọng Tâm Trên Giao Diện Chính
 
-```tsx
-// 1. Tiêu đề lớn đầu màn hình (Large Title - iOS Style)
-<View className="px-5 pt-3 pb-4">
-  <View className="flex-row items-center gap-1.5 px-2.5 py-1 rounded-full bg-blue-100 self-start mb-1.5">
-    <Sparkles size={13} color="#2563EB" />
-    <Text className="text-xs font-semibold text-blue-700">TÊN PHÂN HỆ</Text>
-  </View>
-  <Text className="text-3xl font-bold tracking-tight text-zinc-900">Tiêu Đề Màn Hình</Text>
-  <Text className="text-sm text-zinc-500 mt-1">Mô tả ngắn gọn công dụng cho người dùng</Text>
-</View>
+### 2.1. Thanh Tiêu Đề & Lời Chào (Header & Greeting)
+- Top Bar:
+  - Logo thương hiệu: Icon chữ thập y tế xanh + chữ **MediScan** (hoặc **Medexa**).
+  - Phía bên phải: Avatar người dùng tròn, chuông thông báo (Bell with red dot) và **Nút Gọi Khẩn Cấp 115** màu đỏ/hồng nhẹ (`📞 115`).
+- Tiêu đề phong cách Medexa:
+  - Dòng trên: `Hi Nguyễn Văn An` (text-zinc-500).
+  - Dòng dưới: `Good ` + `<Text className="text-blue-600 font-extrabold">Morning</Text>` (hoặc `Sức Khỏe ` + `<Text className="text-blue-600 font-extrabold">Hôm Nay</Text>`).
+- Thanh Pills Lọc Ngang:
+  - Pill màu đen active: `[Tất cả / Overview]` (nền đen `bg-zinc-900 text-white rounded-full`).
+  - Pills phụ: `[Bản Dịch Đơn]`, `[Lịch Uống]`, `[Bác Sĩ]`.
+  - Nút tìm kiếm tròn màu xanh dương nhạt bên phải `[🔍]`.
 
-// 2. Tiêu đề nhóm danh sách (Group Section Header)
-<Text className="text-xs font-semibold uppercase tracking-wider text-zinc-400 px-5 mb-2 mt-4">
-  TÊN NHÓM DỮ LIỆU
-</Text>
-```
+### 2.2. Khối Điểm Sức Khỏe & An Toàn Thuốc (Health Score Curve)
+- Thẻ lớn cong bo tròn `rounded-[28px]`:
+  - Tiêu đề: `Chỉ Số Đơn Thuốc: 95/100 ↑ 12% An toàn`.
+  - Biểu đồ đường cong uốn lượn màu xanh thanh lịch (Vector curve line) thể hiện tiến trình điều trị và kiểm định an toàn dược học.
 
----
+### 2.3. Hàng Thẻ Chỉ Số Kép (Two Metrics Row)
+- Thẻ trái: `Nhịp Tim / 110 bpm / Bình thường` kèm đồ thị nhịp tim mini.
+- Thẻ phải: `Cữ Thuốc / 3/4 Đã uống / Tốt` kèm biểu đồ cột mini.
 
-## 4. Quy Chuẩn Thẻ Thao Tác (Inset Grouped Card)
-
-Mọi danh sách hoặc khối chức năng đều phải bọc trong khối Card tiêu chuẩn:
-```tsx
-<View className="mx-4 my-2 overflow-hidden rounded-3xl border border-slate-200/60 bg-white p-5 shadow-sm">
-  {/* Header Thẻ */}
-  <View className="flex-row items-center justify-between pb-3 border-b border-slate-100">
-    <View className="flex-row items-center gap-3">
-      <View className="size-10 items-center justify-center rounded-2xl bg-blue-50">
-        <Pill size={20} color="#2563EB" />
-      </View>
-      <View>
-        <Text className="text-base font-semibold text-zinc-900">Tên Thẻ</Text>
-        <Text className="text-xs text-zinc-400">Thông tin phụ</Text>
-      </View>
-    </View>
-    <View className="rounded-full bg-emerald-50 px-2.5 py-1">
-      <Text className="text-xs font-semibold text-emerald-700">Trạng Thái</Text>
-    </View>
-  </View>
-</View>
-```
+### 2.4. Cửa Sổ Chatbot Bác Sĩ Online (AI Doctor Window)
+- Nằm nổi bật ở nửa trên giao diện:
+  - Thẻ `AI Health Insights / Bác Sĩ Trực Tuyến` với avatar Bác Sĩ / Robot 3D thân thiện.
+  - Khung hội thoại trực tuyến giải thích đơn thuốc, kiêng cữ, nhắc lịch.
+  - Bấm vào mở hộp thoại chat 2 chiều thời gian thực.
 
 ---
 
-## 5. Quy Chuẩn Nút Bấm Chính (Primary CTA Button)
-
-```tsx
-<Pressable
-  onPress={() => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    handleAction();
-  }}
-  className="flex-row items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 px-6 shadow-sm shadow-blue-500/25 active:scale-[0.98] active:opacity-90"
->
-  <Text className="text-base font-semibold text-white">Bắt đầu hành động</Text>
-</Pressable>
-```
-
----
-
-## 6. Quy Định Chi Tiết Từng Phân Hệ (3 Nhánh)
-
-### 🩺 Nhánh 1: Quét Đơn Thuốc Bác Sĩ (AI PrescriptScan) — `app/(tabs)/index.tsx`
-- **Mục tiêu:** Quét chữ viết tay bác sĩ, khử nhiễu ảnh, bóc tách tên thuốc, hàm lượng, số lượng, liều dùng theo cữ.
-- **Tính năng bắt buộc:**
-  - Vùng ngắm chụp OCR có viền đo góc và quét tia laser mô phỏng.
-  - **Quick Presets Demo:** 2 đơn thuốc mẫu (Viêm họng cấp & Tim mạch huyết áp) phục vụ ban giám khảo test ngay.
-  - Khối Cảnh báo Tương tác & Dị ứng thuốc (Safety Alert Banner) màu hổ phách/đỏ nổi bật.
-  - Nút CTA chuyển đơn sang Lịch uống thuốc.
-
-### ⏰ Nhánh 2: Lịch Uống Thuốc Thông Minh (Smart MedSchedule) — `app/(tabs)/two.tsx`
-- **Mục tiêu:** Tự động đồng bộ từ đơn thuốc vừa quét, theo dõi tuân thủ liều dùng theo ngày.
-- **Cấu trúc giao diện:**
-  - **Thanh đo tiến độ tuân thủ (Daily Adherence Streak):** Tỷ lệ % cữ thuốc đã uống trong ngày (ví dụ: `2/4 cữ đã hoàn thành - 50%`).
-  - **Lọc theo 4 khung giờ:** Tab lọc ngang [Tất cả] [Sáng 08:00] [Trưa 12:30] [Chiều 18:30] [Tối 21:30].
-  - **Hàng thuốc tương tác:** Thẻ thuốc với nút Checkbox tròn to; bấm vào kích hoạt `Haptics` và chuyển trạng thái "Đã uống lúc 08:15" sang màu xanh lá nhạt (`bg-emerald-50`).
-  - Nút thêm nhanh cữ thuốc hoặc xem lại đơn gốc từ Nhánh 1.
-
-### 💬 Nhánh 3: Trợ Lý Đồng Hành & Báo Cáo Triệu Chứng (Health Companion) — `app/(tabs)/three.tsx`
-- **Mục tiêu:** Bám sát sức khỏe bệnh nhân sau khi uống thuốc, phòng ngừa biến chứng.
-- **Cấu trúc giao diện:**
-  - **Nhật ký cảm giác nhanh (One-tap Symptom Logger):** 3 nút chọn nhanh biểu tượng cảm xúc [Khỏe re] [Hơi mệt] [Bất thường].
-  - **Thẻ Triệu chứng phổ biến:** Chips chọn nhanh [Đắng miệng] [Buồn nôn] [Chóng mặt] [Ngứa/Phát ban] [Đau bụng].
-  - **Khung Hỏi Đáp AI Trợ Lý Dược Sĩ:** Giải đáp thắc mắc về đơn thuốc bằng tiếng Việt đời thường (VD: "Uống thuốc này có kiêng rượu bia không?", "Quên uống thì làm thế nào?").
-  - **Hỗ trợ Khẩn Cấp (SOS Banner):** Nút gọi nhanh hotline y tế 115 hoặc gửi báo cáo phản ứng thuốc cho bác sĩ điều trị.
+## 3. Luồng Quét & Bản Dịch Đơn Thuốc (Centered Scan Flow)
+- Bấm vào **Nút Scan Tròn Trung Tâm**:
+  - Mở camera scanner / bộ quét mô phỏng AI OCR chữ bác sĩ.
+  - **Bản Dịch Đơn Thuốc (Prescription Translation):**
+    - Chuyển dịch toàn bộ chữ viết tay bác sĩ sang văn bản chuẩn y khoa:
+      - Bác sĩ kê đơn & Bệnh viện.
+      - Chẩn đoán chi tiết.
+      - Danh sách thuốc: Hoạt chất, hàm lượng, số lượng, liều dùng theo bữa.
+      - Cảnh báo tương tác thuốc & kiêng khem.
+    - **2 Nút Xuất File Bắt Buộc:**
+      - **[📄 Xuất PDF]**: Sinh file PDF bản dịch rõ nét gửi in hoặc lưu trữ.
+      - **[📝 Xuất DOCX]**: Sinh file Word bản dịch phục vụ chỉnh sửa.
+    - **Nút Cấp Cứu 115:** Gọi trực tiếp tổng đài 115 khi bệnh nhân có biểu hiện sốc phản vệ hoặc nguy kịch.
 
 ---
 
-## 7. Nguyên Tắc Cốt Lõi Cho Mọi Nhánh
-1. **Zero-Crash Rule:** 100% màn hình phải có mock data dự phòng trong `mocks/mockData.ts` để demo không phụ thuộc mạng.
-2. **Strict TypeScript:** Chạy `npx tsc --noEmit` phải đạt 0 lỗi trước khi commit.
-3. **Icons:** Chỉ dùng từ `lucide-react-native` với `size={20}` hoặc `size={24}`.
+## 4. Phân Công Đồng Bộ Trên 3 Nhánh
+- **Nhánh `1` (Scan & Bản Dịch + Xuất PDF/DOCX):** Chịu trách nhiệm nút Scan trung tâm, màn hình quét OCR và xuất file PDF/DOCX.
+- **Nhánh `2` (Giao Diện Chính Medexa Style):** Chịu trách nhiệm toàn bộ Dashboard màn hình chính theo hình mẫu (Header, Curve Card, Metrics, 115 Action).
+- **Nhánh `3` (Cửa Sổ Chatbot Bác Sĩ Online & Hotline 115):** Chịu trách nhiệm Cửa sổ Chatbot Bác sĩ Online và kết nối khẩn cấp 115.

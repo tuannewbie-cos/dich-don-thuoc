@@ -1,30 +1,30 @@
 import React from 'react';
 import { Tabs } from 'expo-router';
 import { Platform } from 'react-native';
-import { ScanLine, CalendarClock, HeartHandshake } from 'lucide-react-native';
+import { Home, FileText, Bot } from 'lucide-react-native';
 
 export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
         headerShown: false,
-        tabBarActiveTintColor: '#2563EB', // Apple System Blue
+        tabBarActiveTintColor: '#2563EB', // Electric Medical Blue
         tabBarInactiveTintColor: '#94A3B8', // Slate 400
         tabBarStyle: {
           backgroundColor: '#FFFFFF',
           borderTopWidth: 1,
-          borderTopColor: '#E2E8F0',
-          elevation: 0,
-          shadowOpacity: 0.05,
-          shadowOffset: { width: 0, height: -2 },
-          shadowRadius: 6,
-          height: Platform.OS === 'ios' ? 88 : 64,
+          borderTopColor: '#F1F5F9',
+          elevation: 8,
+          shadowOpacity: 0.06,
+          shadowOffset: { width: 0, height: -4 },
+          shadowRadius: 10,
+          height: Platform.OS === 'ios' ? 88 : 66,
           paddingTop: 8,
           paddingBottom: Platform.OS === 'ios' ? 28 : 10,
         },
         tabBarLabelStyle: {
           fontSize: 11,
-          fontWeight: '600',
+          fontWeight: '700',
           marginTop: 2,
         },
       }}
@@ -32,27 +32,27 @@ export default function TabLayout() {
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Quét Đơn',
+          title: 'Trang Chủ',
           tabBarIcon: ({ color, size }) => (
-            <ScanLine size={22} color={color} strokeWidth={2.2} />
+            <Home size={22} color={color} strokeWidth={2.2} />
           ),
         }}
       />
       <Tabs.Screen
         name="two"
         options={{
-          title: 'Lịch Uống',
+          title: 'Bản Dịch',
           tabBarIcon: ({ color, size }) => (
-            <CalendarClock size={22} color={color} strokeWidth={2.2} />
+            <FileText size={22} color={color} strokeWidth={2.2} />
           ),
         }}
       />
       <Tabs.Screen
         name="three"
         options={{
-          title: 'Đồng Hành',
+          title: 'Bác Sĩ AI',
           tabBarIcon: ({ color, size }) => (
-            <HeartHandshake size={22} color={color} strokeWidth={2.2} />
+            <Bot size={22} color={color} strokeWidth={2.2} />
           ),
         }}
       />

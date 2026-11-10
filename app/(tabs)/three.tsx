@@ -1,6 +1,6 @@
 import React from 'react';
-import { HealthCompanion } from '@/components/features/companion/HealthCompanion';
+import { DoctorChatbotScreen } from '@/components/features/companion/DoctorChatbotScreen';
 
 export default function TabThreeScreen() {
-  return <HealthCompanion />;
+  return <DoctorChatbotScreen />;
 }

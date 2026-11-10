@@ -1,6 +1,6 @@
 import React from 'react';
-import { PrescriptionScanner } from '@/components/features/scanner/PrescriptionScanner';
+import { MedexaHomeScreen } from '@/components/features/home/MedexaHomeScreen';
 
 export default function TabOneScreen() {
-  return <PrescriptionScanner />;
+  return <MedexaHomeScreen />;
 }
