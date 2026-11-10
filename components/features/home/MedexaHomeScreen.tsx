@@ -1,5 +1,14 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, SafeAreaView, Image } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  SafeAreaView,
+  Image,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import {
   Bell,
   Search,
@@ -13,128 +22,115 @@ import {
   Activity,
   FileText,
   ScanLine,
+  Flame,
 } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
-import { PrescriptionScannerModal } from '@/components/features/scanner/PrescriptionScannerModal';
-import { PrescriptionTranslationModal } from '@/components/features/scanner/PrescriptionTranslationModal';
-import { DoctorChatbotModal } from '@/components/features/companion/DoctorChatbotModal';
+import { useRouter } from 'expo-router';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
 
 export function MedexaHomeScreen() {
-  const { activePrescription } = usePrescriptionStore();
-  const [showScanner, setShowScanner] = useState(false);
-  const [showTranslation, setShowTranslation] = useState(false);
-  const [showChatbot, setShowChatbot] = useState(false);
+  const router = useRouter();
+  const { openScanner } = usePrescriptionStore();
+  const [activePill, setActivePill] = useState<'overview' | 'report' | 'appointments'>('overview');
   const [showEmergency, setShowEmergency] = useState(false);
-  const [activePill, setActivePill] = useState<'overview' | 'translation' | 'appointments'>('overview');
-
-  const handleOpenScanner = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setShowScanner(true);
-  };
-
-  const handleOpenTranslation = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowTranslation(true);
-  };
-
-  const handleOpenChatbot = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setShowChatbot(true);
-  };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F7FB]">
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 110 }}
+        contentContainerStyle={styles.scrollContent}
       >
-        {/* Top Bar (Logo + Avatar + Notification + 115 SOS) */}
-        <View className="flex-row items-center justify-between px-5 pt-3 pb-2">
-          {/* Brand Logo */}
-          <View className="flex-row items-center gap-2">
-            <View className="size-9 items-center justify-center rounded-2xl bg-blue-600 shadow-sm shadow-blue-500/30">
+        {/* Top Bar: Brand + Avatar + Notification + 115 SOS */}
+        <View style={styles.topBar}>
+          {/* Brand Logo (Medexa Style) */}
+          <View style={styles.brandContainer}>
+            <View style={styles.brandIconBox}>
               <Activity size={20} color="#FFFFFF" strokeWidth={2.5} />
             </View>
-            <Text className="text-xl font-black tracking-tight text-zinc-900">
-              Medexa<Text className="text-blue-600">Scan</Text>
+            <Text style={styles.brandText}>
+              Medexa<Text style={{ color: '#0066FE' }}>Scan</Text>
             </Text>
           </View>
 
           {/* Right Actions */}
-          <View className="flex-row items-center gap-2.5">
+          <View style={styles.rightActions}>
             {/* Quick 115 SOS Button */}
             <Pressable
               onPress={() => setShowEmergency(true)}
-              className="flex-row items-center gap-1 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 active:scale-[0.95]"
+              style={styles.sosButton}
             >
-              <PhoneCall size={13} color="#E11D48" />
-              <Text className="text-xs font-bold text-rose-700">115</Text>
+              <PhoneCall size={12} color="#E11D48" />
+              <Text style={styles.sosText}>115</Text>
             </Pressable>
 
             {/* Notification Bell */}
             <Pressable
               onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-              className="size-10 items-center justify-center rounded-full bg-white border border-slate-100 shadow-sm active:bg-slate-50 relative"
+              style={styles.bellButton}
             >
               <Bell size={18} color="#1E293B" />
-              <View className="absolute top-2.5 right-2.5 size-2 rounded-full bg-blue-600" />
+              <View style={styles.bellBadge} />
             </Pressable>
 
             {/* User Avatar */}
-            <View className="size-10 rounded-full overflow-hidden border-2 border-white shadow-sm">
+            <View style={styles.avatarBox}>
               <Image
                 source={{ uri: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=150' }}
-                className="size-full bg-slate-200"
+                style={styles.avatarImg}
               />
             </View>
           </View>
         </View>
 
-        {/* Greeting Headline (Medexa Style) */}
-        <View className="px-5 pt-3 pb-3">
-          <Text className="text-sm font-semibold text-zinc-400">Hi Nguyễn Văn An,</Text>
-          <Text className="text-3xl font-extrabold tracking-tight text-zinc-900 mt-0.5">
-            Good <Text className="text-blue-600 font-black">Morning</Text>
+        {/* Greeting Headline: "Chào bạn," -> "Good Morning" (KHÔNG CÓ TÊN BỆNH NHÂN) */}
+        <View style={styles.greetingSection}>
+          <Text style={styles.greetingSub}>Chào bạn,</Text>
+          <Text style={styles.greetingMain}>
+            Good <Text style={styles.greetingAccent}>Morning</Text>
           </Text>
         </View>
 
-        {/* Quick Filter Pills Row */}
-        <View className="flex-row items-center gap-2 px-5 pb-4">
+        {/* Quick Filter Pills Row (Overview, Report, Appointments + Search) */}
+        <View style={styles.pillsRow}>
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setActivePill('overview');
             }}
-            className={`px-4 py-2 rounded-full active:scale-[0.97] ${
-              activePill === 'overview' ? 'bg-zinc-900' : 'bg-white border border-slate-100'
-            }`}
+            style={[
+              styles.pill,
+              activePill === 'overview' ? styles.pillActive : styles.pillInactive,
+            ]}
           >
             <Text
-              className={`text-xs font-bold ${
-                activePill === 'overview' ? 'text-white' : 'text-zinc-600'
-              }`}
+              style={[
+                styles.pillText,
+                activePill === 'overview' ? styles.pillTextActive : styles.pillTextInactive,
+              ]}
             >
-              Tổng quan
+              Overview
             </Text>
           </Pressable>
 
           <Pressable
             onPress={() => {
-              setActivePill('translation');
-              handleOpenTranslation();
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              setActivePill('report');
+              router.navigate('/two');
             }}
-            className={`px-4 py-2 rounded-full active:scale-[0.97] ${
-              activePill === 'translation' ? 'bg-zinc-900' : 'bg-white border border-slate-100'
-            }`}
+            style={[
+              styles.pill,
+              activePill === 'report' ? styles.pillActive : styles.pillInactive,
+            ]}
           >
             <Text
-              className={`text-xs font-bold ${
-                activePill === 'translation' ? 'text-white' : 'text-zinc-600'
-              }`}
+              style={[
+                styles.pillText,
+                activePill === 'report' ? styles.pillTextActive : styles.pillTextInactive,
+              ]}
             >
-              Bản dịch đơn
+              Report
             </Text>
           </Pressable>
 
@@ -143,162 +139,168 @@ export function MedexaHomeScreen() {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
               setActivePill('appointments');
             }}
-            className={`px-4 py-2 rounded-full active:scale-[0.97] ${
-              activePill === 'appointments' ? 'bg-zinc-900' : 'bg-white border border-slate-100'
-            }`}
+            style={[
+              styles.pill,
+              activePill === 'appointments' ? styles.pillActive : styles.pillInactive,
+            ]}
           >
             <Text
-              className={`text-xs font-bold ${
-                activePill === 'appointments' ? 'text-white' : 'text-zinc-600'
-              }`}
+              style={[
+                styles.pillText,
+                activePill === 'appointments' ? styles.pillTextActive : styles.pillTextInactive,
+              ]}
             >
-              Lịch khám
+              Appointments
             </Text>
           </Pressable>
 
           {/* Search Icon Circle Button */}
           <Pressable
             onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
-            className="size-9 ml-auto items-center justify-center rounded-full bg-blue-50 active:bg-blue-100"
+            style={styles.searchButton}
           >
-            <Search size={16} color="#2563EB" />
+            <Search size={16} color="#FFFFFF" />
           </Pressable>
         </View>
 
-        {/* Hero Card: Health / Safety Score with Smooth Curve Graph */}
-        <View className="mx-4 mb-4 rounded-[28px] bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100">
-          <View className="flex-row items-center justify-between mb-2">
+        {/* Hero Card: Health Score with Smooth Curve Graph */}
+        <View style={styles.card}>
+          <View style={styles.cardHeader}>
             <View>
-              <Text className="text-xs font-semibold text-zinc-400">Độ An Toàn Đơn Thuốc</Text>
-              <Text className="text-2xl font-black text-zinc-900 mt-0.5">85<Text className="text-base text-zinc-400 font-semibold">/100</Text></Text>
+              <Text style={styles.cardSubTitle}>Health Score</Text>
+              <Text style={styles.scoreText}>
+                85<Text style={styles.scoreSub}>/100</Text>
+              </Text>
             </View>
-            <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50">
+            <View style={styles.badgeSuccess}>
               <TrendingUp size={13} color="#059669" />
-              <Text className="text-xs font-bold text-emerald-700">↑ 12%</Text>
+              <Text style={styles.badgeSuccessText}>↑ 12%</Text>
             </View>
           </View>
 
-          {/* Simulated Smooth Blue Wave Graph */}
-          <View className="h-24 justify-end pt-2 pb-1">
-            <View className="flex-row items-end justify-between px-2 h-16">
+          {/* Smooth Blue Wave Graphic Container */}
+          <View style={styles.graphContainer}>
+            <View style={styles.graphBarsRow}>
               {[
-                { h: 35, active: false },
+                { h: 32, active: false },
                 { h: 42, active: false },
-                { h: 38, active: false },
-                { h: 56, active: false },
-                { h: 64, active: true },
-                { h: 48, active: false },
-                { h: 52, active: false },
+                { h: 36, active: false },
+                { h: 58, active: false },
+                { h: 72, active: true },
+                { h: 50, active: false },
+                { h: 54, active: false },
               ].map((bar, i) => (
-                <View key={i} className="items-center gap-1 flex-1">
-                  {bar.active && (
-                    <View className="size-2 rounded-full bg-blue-600 mb-1 shadow-sm shadow-blue-500" />
-                  )}
+                <View key={i} style={styles.barColumn}>
+                  {bar.active && <View style={styles.activeDot} />}
                   <View
-                    className={`w-2.5 rounded-full ${
-                      bar.active ? 'bg-blue-600' : 'bg-blue-100'
-                    }`}
-                    style={{ height: bar.h }}
+                    style={[
+                      styles.barTrack,
+                      {
+                        height: bar.h,
+                        backgroundColor: bar.active ? '#0066FE' : '#E0EDFF',
+                      },
+                    ]}
                   />
                 </View>
               ))}
             </View>
-          </View>
 
-          {/* Days of week axis */}
-          <View className="flex-row justify-between px-2 pt-2 border-t border-slate-50">
-            {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
-              <Text
-                key={d}
-                className={`text-[11px] font-semibold ${
-                  i === 4 ? 'text-blue-600 font-bold' : 'text-zinc-400'
-                }`}
-              >
-                {d}
-              </Text>
-            ))}
+            {/* Days of week axis */}
+            <View style={styles.axisRow}>
+              {['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].map((d, i) => (
+                <Text
+                  key={d}
+                  style={[
+                    styles.axisText,
+                    i === 4 && { color: '#0066FE', fontWeight: '800' },
+                  ]}
+                >
+                  {d}
+                </Text>
+              ))}
+            </View>
           </View>
         </View>
 
-        {/* Two Metrics Row (Heart Rate & Medication) */}
-        <View className="flex-row gap-3 px-4 mb-4">
-          {/* Card Left: Heart Rate */}
-          <View className="flex-1 rounded-[26px] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100">
-            <View className="flex-row items-center justify-between mb-1">
-              <Text className="text-xs font-semibold text-zinc-400">Nhịp Tim</Text>
+        {/* Two Metrics Row: Health Rate & Sleep / Medication */}
+        <View style={styles.twoMetricsRow}>
+          {/* Card Left: Health Rate */}
+          <View style={[styles.card, styles.metricCard]}>
+            <View style={styles.metricHeader}>
+              <Text style={styles.metricTitle}>Health Rate</Text>
               <Heart size={14} color="#E11D48" />
             </View>
-            <Text className="text-xl font-extrabold text-zinc-900">
-              110<Text className="text-xs font-medium text-zinc-400"> bpm</Text>
+            <Text style={styles.metricValue}>
+              110<Text style={styles.metricUnit}>bpm</Text>
             </Text>
-            <Text className="text-[11px] font-bold text-emerald-600 mt-0.5">Bình thường</Text>
+            <Text style={styles.metricStatusNormal}>Normal</Text>
 
             {/* Heartbeat ECG waveform graphic */}
-            <View className="h-8 flex-row items-center justify-between px-1 mt-2 bg-rose-50/50 rounded-xl">
-              {[6, 12, 4, 20, 8, 16, 5, 24, 10, 6].map((h, i) => (
+            <View style={styles.ecgContainer}>
+              {[8, 14, 5, 22, 10, 18, 6, 26, 12, 7].map((h, i) => (
                 <View
                   key={i}
-                  className="w-1 bg-rose-400 rounded-full"
-                  style={{ height: h }}
+                  style={[styles.ecgBar, { height: h }]}
                 />
               ))}
             </View>
           </View>
 
-          {/* Card Right: Medication / Uống thuốc */}
-          <View className="flex-1 rounded-[26px] bg-white p-4 shadow-[0_4px_20px_rgba(0,0,0,0.03)] border border-slate-100">
-            <View className="flex-row items-center justify-between mb-1">
-              <Text className="text-xs font-semibold text-zinc-400">Đã Uống</Text>
-              <Pill size={14} color="#2563EB" />
+          {/* Card Right: Sleep / Medication */}
+          <View style={[styles.card, styles.metricCard]}>
+            <View style={styles.metricHeader}>
+              <Text style={styles.metricTitle}>Sleep</Text>
+              <Pill size={14} color="#0066FE" />
             </View>
-            <Text className="text-xl font-extrabold text-zinc-900">
-              3/4<Text className="text-xs font-medium text-zinc-400"> cữ</Text>
+            <Text style={styles.metricValue}>
+              7<Text style={styles.metricUnit}>h </Text>45<Text style={styles.metricUnit}>m</Text>
             </Text>
-            <Text className="text-[11px] font-bold text-blue-600 mt-0.5">Đúng giờ</Text>
+            <Text style={styles.metricStatusGood}>Good</Text>
 
             {/* Vertical Bars Graphic */}
-            <View className="h-8 flex-row items-end justify-between px-2 mt-2 bg-blue-50/50 rounded-xl pb-1">
-              {[14, 22, 18, 24].map((h, i) => (
+            <View style={styles.sleepBarsContainer}>
+              {[14, 24, 18, 28, 20].map((h, i) => (
                 <View
                   key={i}
-                  className={`w-3 rounded-full ${i < 3 ? 'bg-blue-600' : 'bg-blue-200'}`}
-                  style={{ height: h }}
+                  style={[
+                    styles.sleepBar,
+                    {
+                      height: h,
+                      backgroundColor: i % 2 === 0 ? '#0066FE' : '#BFDBFE',
+                    },
+                  ]}
                 />
               ))}
             </View>
           </View>
         </View>
 
-        {/* AI Health Insights / Chatbot Bác Sĩ Online Window (Nổi bật trên giao diện) */}
-        <View className="mx-4 mb-4 rounded-[28px] bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100">
-          <View className="flex-row items-center justify-between mb-3">
-            <View className="flex-row items-center gap-2">
-              <View className="size-7 items-center justify-center rounded-lg bg-blue-100">
-                <Sparkles size={14} color="#2563EB" />
-              </View>
-              <Text className="text-sm font-bold text-zinc-900">Bác Sĩ Dược Sĩ AI Trực Tuyến</Text>
-            </View>
-
-            <Pressable onPress={handleOpenChatbot}>
-              <Text className="text-xs font-bold text-blue-600">Chat ngay</Text>
+        {/* AI Health Insights / Chatbot Bác Sĩ Online Window */}
+        <View style={styles.card}>
+          <View style={styles.insightHeader}>
+            <Text style={styles.insightTitle}>AI Health Insights</Text>
+            <Pressable onPress={() => router.navigate('/three')}>
+              <Text style={styles.viewAllText}>View all</Text>
             </Pressable>
           </View>
 
           <Pressable
-            onPress={handleOpenChatbot}
-            className="flex-row items-center justify-between p-3.5 rounded-2xl bg-slate-50 border border-slate-200/60 active:bg-slate-100"
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              router.navigate('/three');
+            }}
+            style={styles.insightContentBox}
           >
-            <View className="flex-row items-center gap-3 flex-1 pr-2">
-              {/* Doctor Avatar */}
-              <View className="size-11 items-center justify-center rounded-2xl bg-blue-600 shadow-sm shadow-blue-500/20">
-                <Bot size={22} color="#FFFFFF" />
+            <View style={styles.insightLeft}>
+              <View style={styles.insightIconBox}>
+                <Sparkles size={20} color="#0066FE" />
               </View>
-              <View className="flex-1">
-                <Text className="text-xs font-bold text-zinc-800">
-                  BS. Trí đã đối soát đơn thuốc của bạn!
+              <View style={styles.insightTextBox}>
+                <Text style={styles.insightMainText}>
+                  Bác sĩ AI đã sẵn sàng tư vấn
                 </Text>
-                <Text className="text-[11px] text-zinc-500 mt-0.5" numberOfLines={2}>
-                  "Thuốc Clarithromycin 500mg đã được dịch xong. Bấm vào đây để hỏi đáp về kiêng cữ & tác dụng phụ."
+                <Text style={styles.insightSubText}>
+                  Bấm vào đây để trò chuyện & hỏi đáp ngay
                 </Text>
               </View>
             </View>
@@ -306,71 +308,28 @@ export function MedexaHomeScreen() {
           </Pressable>
         </View>
 
-        {/* Quick Prescription Translation Preview Card */}
-        {activePrescription && (
-          <View className="mx-4 mb-4 rounded-[28px] bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100">
-            <View className="flex-row items-center justify-between mb-3">
-              <View className="flex-row items-center gap-2">
-                <FileText size={16} color="#2563EB" />
-                <Text className="text-sm font-bold text-zinc-900">Bản Dịch Đơn Thuốc Gần Nhất</Text>
-              </View>
-              <Pressable onPress={handleOpenTranslation}>
-                <Text className="text-xs font-bold text-blue-600">Xem chi tiết</Text>
-              </Pressable>
+        {/* Quick Prescription Scan Entry Banner */}
+        <View style={[styles.card, styles.scanBannerCard]}>
+          <View style={styles.scanBannerContent}>
+            <View style={styles.scanBannerIcon}>
+              <ScanLine size={24} color="#FFFFFF" strokeWidth={2.4} />
             </View>
-
-            <Pressable
-              onPress={handleOpenTranslation}
-              className="p-3.5 rounded-2xl bg-blue-50/60 border border-blue-100 flex-row items-center justify-between"
-            >
-              <View className="flex-1 pr-2">
-                <Text className="text-xs font-bold text-blue-950">
-                  {activePrescription.diagnosis}
-                </Text>
-                <Text className="text-[11px] text-blue-700 mt-0.5">
-                  {activePrescription.doctorName} • {activePrescription.medications.length} loại thuốc đã bóc tách
-                </Text>
-              </View>
-              <View className="flex-row items-center gap-1 px-2.5 py-1 rounded-xl bg-blue-600">
-                <Text className="text-[11px] font-bold text-white">Xem & Xuất</Text>
-              </View>
-            </Pressable>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.scanBannerTitle}>Quét Đơn Thuốc Bác Sĩ</Text>
+              <Text style={styles.scanBannerSub}>
+                Dịch chữ viết tay, kiểm tra liều dùng & xuất file PDF/DOCX
+              </Text>
+            </View>
           </View>
-        )}
+
+          <Pressable onPress={openScanner} style={styles.scanCTAButton}>
+            <Text style={styles.scanCTAText}>Bắt Đầu Quét Ngay</Text>
+            <ChevronRight size={16} color="#FFFFFF" />
+          </Pressable>
+        </View>
       </ScrollView>
 
-      {/* Floating Center Scan Bar (Fixed at bottom dock) */}
-      <View className="absolute bottom-4 left-0 right-0 items-center justify-center pointer-events-box-none">
-        <Pressable
-          onPress={handleOpenScanner}
-          className="flex-row items-center gap-2.5 px-6 py-3.5 rounded-full bg-blue-600 shadow-xl shadow-blue-500/40 active:scale-[0.96]"
-        >
-          <ScanLine size={20} color="#FFFFFF" strokeWidth={2.5} />
-          <Text className="text-sm font-black text-white uppercase tracking-wider">
-            Quét Đơn Viết Tay
-          </Text>
-        </Pressable>
-      </View>
-
-      {/* Modals */}
-      <PrescriptionScannerModal
-        visible={showScanner}
-        onClose={() => setShowScanner(false)}
-        onOpenChatbot={handleOpenChatbot}
-      />
-
-      <PrescriptionTranslationModal
-        visible={showTranslation}
-        prescription={activePrescription}
-        onClose={() => setShowTranslation(false)}
-        onOpenChatbot={handleOpenChatbot}
-      />
-
-      <DoctorChatbotModal
-        visible={showChatbot}
-        onClose={() => setShowChatbot(false)}
-      />
-
+      {/* Emergency 115 Modal */}
       <EmergencyCallModal
         visible={showEmergency}
         onClose={() => setShowEmergency(false)}
@@ -378,3 +337,434 @@ export function MedexaHomeScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F7FB',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  topBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 8,
+  },
+  brandContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  brandIconBox: {
+    width: 36,
+    height: 36,
+    borderRadius: 14,
+    backgroundColor: '#0066FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#0066FE',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+  },
+  brandText: {
+    fontSize: 20,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+  rightActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  sosButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 20,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  sosText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E11D48',
+  },
+  bellButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000000',
+    shadowOpacity: 0.04,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+  bellBadge: {
+    position: 'absolute',
+    top: 9,
+    right: 9,
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#0066FE',
+  },
+  avatarBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    overflow: 'hidden',
+    borderWidth: 2,
+    borderColor: '#FFFFFF',
+    shadowColor: '#000000',
+    shadowOpacity: 0.05,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+  avatarImg: {
+    width: '100%',
+    height: '100%',
+    backgroundColor: '#CBD5E1',
+  },
+  greetingSection: {
+    paddingHorizontal: 20,
+    paddingTop: 10,
+    paddingBottom: 12,
+  },
+  greetingSub: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  greetingMain: {
+    fontSize: 32,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+    marginTop: 2,
+  },
+  greetingAccent: {
+    color: '#0066FE',
+    fontWeight: '900',
+  },
+  pillsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 20,
+    paddingBottom: 16,
+  },
+  pill: {
+    paddingHorizontal: 16,
+    paddingVertical: 9,
+    borderRadius: 24,
+  },
+  pillActive: {
+    backgroundColor: '#0F172A',
+  },
+  pillInactive: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  pillText: {
+    fontSize: 12,
+    fontWeight: '700',
+  },
+  pillTextActive: {
+    color: '#FFFFFF',
+  },
+  pillTextInactive: {
+    color: '#64748B',
+  },
+  searchButton: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    backgroundColor: '#0066FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: 'auto',
+    shadowColor: '#0066FE',
+    shadowOpacity: 0.35,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+  },
+  card: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 28,
+    backgroundColor: '#FFFFFF',
+    padding: 20,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+    elevation: 3,
+  },
+  cardHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 8,
+  },
+  cardSubTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  scoreText: {
+    fontSize: 26,
+    fontWeight: '900',
+    color: '#0F172A',
+    marginTop: 2,
+  },
+  scoreSub: {
+    fontSize: 16,
+    color: '#94A3B8',
+    fontWeight: '600',
+  },
+  badgeSuccess: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: '#ECFDF5',
+  },
+  badgeSuccessText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#059669',
+  },
+  graphContainer: {
+    marginTop: 6,
+  },
+  graphBarsRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    height: 76,
+    paddingHorizontal: 6,
+  },
+  barColumn: {
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    flex: 1,
+    gap: 4,
+  },
+  activeDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#0066FE',
+    shadowColor: '#0066FE',
+    shadowOpacity: 0.5,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+  },
+  barTrack: {
+    width: 10,
+    borderRadius: 5,
+  },
+  axisRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 6,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: '#F8FAFC',
+  },
+  axisText: {
+    fontSize: 11,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  twoMetricsRow: {
+    flexDirection: 'row',
+    gap: 12,
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  metricCard: {
+    flex: 1,
+    marginHorizontal: 0,
+    marginBottom: 0,
+    padding: 16,
+  },
+  metricHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  metricTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#94A3B8',
+  },
+  metricValue: {
+    fontSize: 22,
+    fontWeight: '900',
+    color: '#0F172A',
+  },
+  metricUnit: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: '#94A3B8',
+  },
+  metricStatusNormal: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669',
+    marginTop: 2,
+  },
+  metricStatusGood: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#0066FE',
+    marginTop: 2,
+  },
+  ecgContainer: {
+    height: 32,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 4,
+    marginTop: 8,
+    backgroundColor: '#FFF1F2',
+    borderRadius: 12,
+  },
+  ecgBar: {
+    width: 4,
+    borderRadius: 2,
+    backgroundColor: '#FB7185',
+  },
+  sleepBarsContainer: {
+    height: 32,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'space-between',
+    paddingHorizontal: 6,
+    paddingBottom: 4,
+    marginTop: 8,
+    backgroundColor: '#EFF6FF',
+    borderRadius: 12,
+  },
+  sleepBar: {
+    width: 8,
+    borderRadius: 4,
+  },
+  insightHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 10,
+  },
+  insightTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  viewAllText: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#0066FE',
+  },
+  insightContentBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 14,
+    borderRadius: 20,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  insightLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    flex: 1,
+    paddingRight: 8,
+  },
+  insightIconBox: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: '#E0EDFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  insightTextBox: {
+    flex: 1,
+  },
+  insightMainText: {
+    fontSize: 13,
+    fontWeight: '700',
+    color: '#0F172A',
+  },
+  insightSubText: {
+    fontSize: 11,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  scanBannerCard: {
+    backgroundColor: '#0F172A',
+    borderColor: '#1E293B',
+  },
+  scanBannerContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 14,
+    marginBottom: 14,
+  },
+  scanBannerIcon: {
+    width: 46,
+    height: 46,
+    borderRadius: 18,
+    backgroundColor: '#0066FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  scanBannerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  scanBannerSub: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 2,
+    lineHeight: 16,
+  },
+  scanCTAButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 12,
+    borderRadius: 18,
+    backgroundColor: '#0066FE',
+  },
+  scanCTAText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+});

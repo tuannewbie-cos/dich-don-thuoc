@@ -8,6 +8,9 @@ interface PrescriptionState {
   isAnalyzing: boolean;
   analysisStep: number;
   syncedPrescriptionIds: string[];
+  isScannerOpen: boolean;
+  openScanner: () => void;
+  closeScanner: () => void;
   setActivePrescription: (prescription: Prescription | null) => void;
   setAnalyzing: (status: boolean) => void;
   setAnalysisStep: (step: number) => void;
@@ -21,6 +24,10 @@ export const usePrescriptionStore = create<PrescriptionState>((set, get) => ({
   isAnalyzing: false,
   analysisStep: 0,
   syncedPrescriptionIds: [],
+  isScannerOpen: false,
+
+  openScanner: () => set({ isScannerOpen: true }),
+  closeScanner: () => set({ isScannerOpen: false }),
 
   setActivePrescription: (prescription) => {
     set({ activePrescription: prescription });

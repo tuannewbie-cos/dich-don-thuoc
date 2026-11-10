@@ -1,5 +1,13 @@
 import React, { useState } from 'react';
-import { View, Text, ScrollView, Pressable, SafeAreaView, Image } from 'react-native';
+import {
+  View,
+  Text,
+  ScrollView,
+  Pressable,
+  SafeAreaView,
+  StyleSheet,
+  Platform,
+} from 'react-native';
 import {
   FileText,
   FileDown,
@@ -35,61 +43,58 @@ export function PrescriptionRecordsScreen() {
   const fileName = `BanDich_DonThuoc_${selectedRx.id}.${exportFormat?.toLowerCase() || 'pdf'}`;
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F7FB]">
+    <SafeAreaView style={styles.safeArea}>
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingBottom: 60 }}
+        contentContainerStyle={styles.scrollContent}
       >
         {/* Header */}
-        <View className="px-5 pt-3 pb-3">
-          <View className="flex-row items-center justify-between">
-            <View className="flex-row items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 self-start mb-1">
-              <FileText size={13} color="#2563EB" />
-              <Text className="text-xs font-bold text-blue-700">BẢN DỊCH CHỮ BÁC SĨ</Text>
+        <View style={styles.header}>
+          <View style={styles.headerTopRow}>
+            <View style={styles.badgeTop}>
+              <FileText size={13} color="#0066FE" />
+              <Text style={styles.badgeTopText}>BẢN DỊCH CHỮ BÁC SĨ</Text>
             </View>
 
             {/* Quick 115 SOS */}
             <Pressable
               onPress={() => setShowEmergency(true)}
-              className="flex-row items-center gap-1 px-3 py-1 rounded-full bg-rose-50 border border-rose-200 active:scale-[0.95]"
+              style={styles.sosButton}
             >
               <PhoneCall size={12} color="#E11D48" />
-              <Text className="text-xs font-bold text-rose-700">115 Cấp Cứu</Text>
+              <Text style={styles.sosText}>115 Cấp Cứu</Text>
             </Pressable>
           </View>
-          <Text className="text-3xl font-extrabold tracking-tight text-zinc-900 mt-1">
-            Bản Dịch Đơn Thuốc
-          </Text>
-          <Text className="text-xs text-zinc-500 mt-0.5">
+
+          <Text style={styles.title}>Bản Dịch Đơn Thuốc</Text>
+          <Text style={styles.subTitle}>
             Đã dịch tự động từ chữ viết tay & lưu trữ chuẩn y khoa
           </Text>
         </View>
 
         {/* 2 Big Export Buttons (PDF & DOCX) */}
-        <View className="flex-row gap-2.5 px-4 mb-4">
+        <View style={styles.exportRow}>
           <Pressable
             onPress={() => handleExport('PDF')}
-            className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl bg-blue-600 shadow-md shadow-blue-500/25 active:scale-[0.98]"
+            style={[styles.exportBtn, styles.exportBtnPdf]}
           >
-            <FileDown size={18} color="#FFFFFF" strokeWidth={2.2} />
-            <Text className="text-sm font-bold text-white">Xuất File PDF</Text>
+            <FileDown size={18} color="#FFFFFF" strokeWidth={2.4} />
+            <Text style={styles.exportBtnText}>Xuất File PDF</Text>
           </Pressable>
 
           <Pressable
             onPress={() => handleExport('DOCX')}
-            className="flex-1 flex-row items-center justify-center gap-2 py-3.5 rounded-2xl bg-indigo-600 shadow-md shadow-indigo-500/25 active:scale-[0.98]"
+            style={[styles.exportBtn, styles.exportBtnDocx]}
           >
-            <FileDown size={18} color="#FFFFFF" strokeWidth={2.2} />
-            <Text className="text-sm font-bold text-white">Xuất File DOCX</Text>
+            <FileDown size={18} color="#FFFFFF" strokeWidth={2.4} />
+            <Text style={styles.exportBtnText}>Xuất File DOCX</Text>
           </Pressable>
         </View>
 
         {/* Prescription Switcher Pills */}
-        <View className="px-4 mb-4">
-          <Text className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2 px-1">
-            Chọn đơn thuốc cần xem / xuất:
-          </Text>
-          <View className="flex-row gap-2">
+        <View style={styles.switcherContainer}>
+          <Text style={styles.sectionLabel}>Chọn đơn thuốc cần xem / xuất:</Text>
+          <View style={styles.switcherRow}>
             {prescriptions.map((rx) => {
               const isSelected = selectedRx.id === rx.id;
               return (
@@ -100,21 +105,21 @@ export function PrescriptionRecordsScreen() {
                     setSelectedRx(rx);
                     setActivePrescription(rx);
                   }}
-                  className={`flex-1 p-3 rounded-2xl border active:scale-[0.98] ${
-                    isSelected
-                      ? 'bg-white border-blue-600 shadow-sm shadow-blue-500/20'
-                      : 'bg-slate-50 border-slate-200/60'
-                  }`}
+                  style={[
+                    styles.switcherCard,
+                    isSelected ? styles.switcherCardActive : styles.switcherCardInactive,
+                  ]}
                 >
                   <Text
-                    className={`text-xs font-bold ${
-                      isSelected ? 'text-blue-700' : 'text-zinc-700'
-                    }`}
+                    style={[
+                      styles.switcherDiagnosis,
+                      { color: isSelected ? '#0066FE' : '#334155' },
+                    ]}
                     numberOfLines={1}
                   >
                     {rx.diagnosis}
                   </Text>
-                  <Text className="text-[10px] text-zinc-400 mt-0.5">{rx.doctorName}</Text>
+                  <Text style={styles.switcherDoctor}>{rx.doctorName}</Text>
                 </Pressable>
               );
             })}
@@ -122,38 +127,34 @@ export function PrescriptionRecordsScreen() {
         </View>
 
         {/* Prescription Metadata Card */}
-        <View className="mx-4 mb-4 rounded-[28px] bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100">
-          <View className="flex-row items-center gap-3 pb-3 border-b border-slate-100">
-            <View className="size-11 items-center justify-center rounded-2xl bg-blue-50">
-              <Stethoscope size={22} color="#2563EB" />
+        <View style={styles.card}>
+          <View style={styles.doctorHeader}>
+            <View style={styles.doctorIconBox}>
+              <Stethoscope size={22} color="#0066FE" />
             </View>
-            <View className="flex-1">
-              <Text className="text-base font-bold text-zinc-900">{selectedRx.doctorName}</Text>
-              <Text className="text-xs text-zinc-500">{selectedRx.hospital}</Text>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.doctorName}>{selectedRx.doctorName}</Text>
+              <Text style={styles.hospitalName}>{selectedRx.hospital}</Text>
             </View>
           </View>
 
-          <View className="pt-3">
-            <Text className="text-xs font-semibold uppercase tracking-wider text-zinc-400 mb-1">
-              Chẩn Đoán Lâm Sàng
-            </Text>
-            <View className="p-3 rounded-2xl bg-blue-50/60 border border-blue-100">
-              <Text className="text-sm font-bold text-blue-900">{selectedRx.diagnosis}</Text>
+          <View style={styles.diagnosisSection}>
+            <Text style={styles.sectionLabel}>Chẩn Đoán Lâm Sàng</Text>
+            <View style={styles.diagnosisBox}>
+              <Text style={styles.diagnosisText}>{selectedRx.diagnosis}</Text>
             </View>
           </View>
         </View>
 
         {/* Safety Warnings Banner */}
         {selectedRx.safetyNotes && selectedRx.safetyNotes.length > 0 && (
-          <View className="mx-4 mb-4 rounded-[26px] bg-amber-50/80 p-4 border border-amber-200/80">
-            <View className="flex-row items-center gap-2 mb-2">
+          <View style={styles.warningCard}>
+            <View style={styles.warningHeader}>
               <ShieldAlert size={18} color="#D97706" />
-              <Text className="text-xs font-bold uppercase tracking-wider text-amber-900">
-                Lưu Ý Dược Học & Cảnh Báo An Toàn
-              </Text>
+              <Text style={styles.warningTitle}>Lưu Ý Dược Học & Cảnh Báo An Toàn</Text>
             </View>
             {selectedRx.safetyNotes.map((note, idx) => (
-              <Text key={idx} className="text-xs text-amber-900 leading-relaxed mb-1">
+              <Text key={idx} style={styles.warningText}>
                 • {note}
               </Text>
             ))}
@@ -161,38 +162,34 @@ export function PrescriptionRecordsScreen() {
         )}
 
         {/* Translated Medicine Items */}
-        <View className="mx-4 mb-4 rounded-[28px] bg-white p-5 shadow-[0_4px_25px_rgba(0,0,0,0.03)] border border-slate-100">
-          <View className="flex-row items-center justify-between mb-3 pb-2 border-b border-slate-100">
-            <View className="flex-row items-center gap-2">
-              <Pill size={18} color="#2563EB" />
-              <Text className="text-sm font-bold text-zinc-900">
+        <View style={styles.card}>
+          <View style={styles.medsHeader}>
+            <View style={styles.medsHeaderLeft}>
+              <Pill size={18} color="#0066FE" />
+              <Text style={styles.medsTitle}>
                 Thuốc Đã Dịch ({selectedRx.medications.length} loại)
               </Text>
             </View>
-            <Text className="text-xs text-zinc-400">Chuẩn GPP</Text>
+            <Text style={styles.medsSub}>Chuẩn GPP</Text>
           </View>
 
-          <View className="gap-3">
+          <View style={styles.medsList}>
             {selectedRx.medications.map((med, index) => (
-              <View
-                key={med.id || index}
-                className="p-3.5 rounded-2xl bg-slate-50/80 border border-slate-200/60"
-              >
-                <View className="flex-row items-center justify-between mb-1.5">
-                  <View className="flex-row items-center gap-2">
-                    <View className="size-6 items-center justify-center rounded-lg bg-blue-100">
-                      <Text className="text-xs font-bold text-blue-700">{index + 1}</Text>
+              <View key={med.id || index} style={styles.medItem}>
+                <View style={styles.medItemHeader}>
+                  <View style={styles.medNameRow}>
+                    <View style={styles.medIndexBadge}>
+                      <Text style={styles.medIndexText}>{index + 1}</Text>
                     </View>
-                    <Text className="text-base font-bold text-zinc-900">{med.name}</Text>
+                    <Text style={styles.medNameText}>{med.name}</Text>
                   </View>
-                  <View className="px-2.5 py-0.5 rounded-full bg-blue-100">
-                    <Text className="text-xs font-bold text-blue-800">{med.dosage}</Text>
+                  <View style={styles.medDosageBadge}>
+                    <Text style={styles.medDosageText}>{med.dosage}</Text>
                   </View>
                 </View>
 
-                <Text className="text-xs text-zinc-600 leading-relaxed mb-2">
-                  Số lượng: <Text className="font-bold text-zinc-800">{med.quantity}</Text> •{' '}
-                  {med.instruction}
+                <Text style={styles.medInstructionText}>
+                  Số lượng: <Text style={{ fontWeight: '800', color: '#0F172A' }}>{med.quantity}</Text> • {med.instruction}
                 </Text>
               </View>
             ))}
@@ -200,18 +197,18 @@ export function PrescriptionRecordsScreen() {
         </View>
 
         {/* Chat with AI Doctor Banner */}
-        <View className="mx-4 mb-4">
+        <View style={styles.chatBannerContainer}>
           <Pressable
             onPress={() => setShowChatbot(true)}
-            className="flex-row items-center justify-between p-4 rounded-[26px] bg-blue-600 shadow-md shadow-blue-500/25 active:scale-[0.98]"
+            style={styles.chatBanner}
           >
-            <View className="flex-row items-center gap-3">
-              <View className="size-10 items-center justify-center rounded-2xl bg-white/20">
+            <View style={styles.chatBannerLeft}>
+              <View style={styles.chatBannerIcon}>
                 <Bot size={22} color="#FFFFFF" />
               </View>
               <View>
-                <Text className="text-sm font-bold text-white">Hỏi Bác Sĩ AI Về Đơn Này</Text>
-                <Text className="text-xs text-blue-100">Giải thích chi tiết tác dụng phụ & kiêng khem</Text>
+                <Text style={styles.chatBannerTitle}>Hỏi Bác Sĩ AI Về Đơn Này</Text>
+                <Text style={styles.chatBannerSub}>Giải thích chi tiết tác dụng phụ & kiêng khem</Text>
               </View>
             </View>
             <ChevronRight size={18} color="#FFFFFF" />
@@ -243,3 +240,337 @@ export function PrescriptionRecordsScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F7FB',
+  },
+  scrollContent: {
+    paddingBottom: 40,
+  },
+  header: {
+    paddingHorizontal: 20,
+    paddingTop: 12,
+    paddingBottom: 14,
+  },
+  headerTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  badgeTop: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 5,
+    borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+  },
+  badgeTopText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#0066FE',
+  },
+  sosButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  sosText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E11D48',
+  },
+  title: {
+    fontSize: 28,
+    fontWeight: '900',
+    color: '#0F172A',
+    letterSpacing: -0.5,
+  },
+  subTitle: {
+    fontSize: 12,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  exportRow: {
+    flexDirection: 'row',
+    gap: 10,
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  exportBtn: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    paddingVertical: 14,
+    borderRadius: 20,
+    shadowOpacity: 0.25,
+    shadowRadius: 8,
+    shadowOffset: { width: 0, height: 4 },
+  },
+  exportBtnPdf: {
+    backgroundColor: '#0066FE',
+    shadowColor: '#0066FE',
+  },
+  exportBtnDocx: {
+    backgroundColor: '#4F46E5',
+    shadowColor: '#4F46E5',
+  },
+  exportBtnText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  switcherContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#94A3B8',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    marginBottom: 8,
+  },
+  switcherRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  switcherCard: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 18,
+    borderWidth: 1,
+  },
+  switcherCardActive: {
+    backgroundColor: '#FFFFFF',
+    borderColor: '#0066FE',
+    shadowColor: '#0066FE',
+    shadowOpacity: 0.15,
+    shadowOffset: { width: 0, height: 3 },
+    shadowRadius: 6,
+  },
+  switcherCardInactive: {
+    backgroundColor: '#F8FAFC',
+    borderColor: '#E2E8F0',
+  },
+  switcherDiagnosis: {
+    fontSize: 12,
+    fontWeight: '800',
+  },
+  switcherDoctor: {
+    fontSize: 10,
+    color: '#94A3B8',
+    marginTop: 2,
+  },
+  card: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 26,
+    backgroundColor: '#FFFFFF',
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    shadowColor: '#000000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 16,
+  },
+  doctorHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    paddingBottom: 12,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  doctorIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 18,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  doctorName: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  hospitalName: {
+    fontSize: 11.5,
+    color: '#64748B',
+    marginTop: 2,
+  },
+  diagnosisSection: {
+    paddingTop: 12,
+  },
+  diagnosisBox: {
+    padding: 12,
+    borderRadius: 16,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  diagnosisText: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+  warningCard: {
+    marginHorizontal: 16,
+    marginBottom: 14,
+    borderRadius: 24,
+    backgroundColor: '#FFFBEB',
+    padding: 16,
+    borderWidth: 1,
+    borderColor: '#FDE68A',
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    marginBottom: 8,
+  },
+  warningTitle: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#92400E',
+    textTransform: 'uppercase',
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#92400E',
+    lineHeight: 18,
+    marginBottom: 4,
+  },
+  medsHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingBottom: 10,
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+    marginBottom: 12,
+  },
+  medsHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  medsTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  medsSub: {
+    fontSize: 11,
+    color: '#94A3B8',
+  },
+  medsList: {
+    gap: 10,
+  },
+  medItem: {
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  medItemHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 6,
+  },
+  medNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  medIndexBadge: {
+    width: 22,
+    height: 22,
+    borderRadius: 8,
+    backgroundColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  medIndexText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1D4ED8',
+  },
+  medNameText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  medDosageBadge: {
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 12,
+    backgroundColor: '#DBEAFE',
+  },
+  medDosageText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#1E40AF',
+  },
+  medInstructionText: {
+    fontSize: 12,
+    color: '#475569',
+    lineHeight: 18,
+  },
+  chatBannerContainer: {
+    paddingHorizontal: 16,
+    marginBottom: 14,
+  },
+  chatBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    padding: 16,
+    borderRadius: 24,
+    backgroundColor: '#0066FE',
+    shadowColor: '#0066FE',
+    shadowOpacity: 0.3,
+    shadowOffset: { width: 0, height: 4 },
+    shadowRadius: 10,
+  },
+  chatBannerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+  },
+  chatBannerIcon: {
+    width: 42,
+    height: 42,
+    borderRadius: 16,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  chatBannerTitle: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  chatBannerSub: {
+    fontSize: 11,
+    color: '#DBEAFE',
+    marginTop: 2,
+  },
+});

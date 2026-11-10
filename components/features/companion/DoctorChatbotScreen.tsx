@@ -9,21 +9,22 @@ import {
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
+  StyleSheet,
 } from 'react-native';
-import { Bot, Send, User, Sparkles, PhoneCall, HelpCircle } from 'lucide-react-native';
+import { Bot, Send, User, Sparkles, PhoneCall, RefreshCcw } from 'lucide-react-native';
 import * as Haptics from 'expo-haptics';
 import { useCompanionStore } from '@/store/useCompanionStore';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
 
 const SUGGESTIONS = [
-  'Đơn thuốc này có kiêng rượu bia hay cà phê không?',
+  'Đơn thuốc này cần kiêng cữ gì không?',
   'Kháng sinh Clarithromycin có gây đắng miệng không?',
-  'Nếu tôi quên uống 1 liều thì làm thế nào?',
-  'Uống xong bị đau dạ dày hoặc buồn nôn thì sao?',
+  'Nếu tôi quên uống 1 liều thì xử lý sao?',
+  'Uống xong thấy hơi buồn nôn thì làm thế nào?',
 ];
 
 export function DoctorChatbotScreen() {
-  const { chatMessages, isAiTyping, sendChatMessage } = useCompanionStore();
+  const { chatMessages, isAiTyping, sendChatMessage, resetDefault } = useCompanionStore();
   const [inputText, setInputText] = useState('');
   const [showEmergency, setShowEmergency] = useState(false);
 
@@ -35,38 +36,55 @@ export function DoctorChatbotScreen() {
   };
 
   return (
-    <SafeAreaView className="flex-1 bg-[#F5F7FB]">
-      {/* Top Header */}
-      <View className="flex-row items-center justify-between px-5 py-3 bg-white border-b border-slate-100">
-        <View className="flex-row items-center gap-2.5">
-          <View className="size-9 items-center justify-center rounded-2xl bg-blue-50 border border-blue-100">
-            <Bot size={20} color="#2563EB" />
+    <SafeAreaView style={styles.safeArea}>
+      {/* Top Header: Clean ChatGPT / Modern AI Chatbot Header */}
+      <View style={styles.topHeader}>
+        <View style={styles.headerLeft}>
+          <View style={styles.botAvatarBox}>
+            <Bot size={20} color="#0066FE" />
           </View>
           <View>
-            <View className="flex-row items-center gap-1.5">
-              <Text className="text-base font-bold text-zinc-900">Bác Sĩ Trực Tuyến AI</Text>
-              <View className="size-2 rounded-full bg-emerald-500" />
+            <View style={styles.headerTitleRow}>
+              <Text style={styles.headerTitle}>Trợ Lý AI</Text>
+              <View style={styles.onlineDot} />
             </View>
-            <Text className="text-[11px] text-zinc-400">Tư vấn đơn thuốc & sức khỏe 24/7</Text>
+            <Text style={styles.headerSub}>Hỗ trợ sức khỏe & đơn thuốc trực tuyến</Text>
           </View>
         </View>
 
-        <Pressable
-          onPress={() => setShowEmergency(true)}
-          className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full bg-rose-50 border border-rose-200 active:scale-[0.95]"
-        >
-          <PhoneCall size={13} color="#E11D48" />
-          <Text className="text-xs font-bold text-rose-700">115 Cấp Cứu</Text>
-        </Pressable>
+        <View style={styles.headerRight}>
+          <Pressable
+            onPress={() => {
+              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              resetDefault();
+            }}
+            style={styles.refreshBtn}
+          >
+            <RefreshCcw size={15} color="#64748B" />
+          </Pressable>
+
+          <Pressable
+            onPress={() => setShowEmergency(true)}
+            style={styles.sosBtn}
+          >
+            <PhoneCall size={12} color="#E11D48" />
+            <Text style={styles.sosBtnText}>115</Text>
+          </Pressable>
+        </View>
       </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        className="flex-1"
+        keyboardVerticalOffset={Platform.OS === 'ios' ? 88 : 0}
+        style={styles.keyboardContainer}
       >
-        {/* Quick Suggestion Pills */}
-        <View className="py-2.5 px-4 bg-white/70 border-b border-slate-100">
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ gap: 8 }}>
+        {/* Quick Suggestion Chips */}
+        <View style={styles.suggestionsContainer}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.suggestionsScroll}
+          >
             {SUGGESTIONS.map((s, idx) => (
               <Pressable
                 key={idx}
@@ -74,10 +92,10 @@ export function DoctorChatbotScreen() {
                   Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                   handleSend(s);
                 }}
-                className="flex-row items-center gap-1.5 px-3 py-1.5 rounded-full bg-blue-50 border border-blue-200/60 active:scale-[0.97]"
+                style={styles.suggestionChip}
               >
-                <Sparkles size={11} color="#2563EB" />
-                <Text className="text-xs font-semibold text-blue-800">{s}</Text>
+                <Sparkles size={11} color="#0066FE" />
+                <Text style={styles.suggestionChipText}>{s}</Text>
               </Pressable>
             ))}
           </ScrollView>
@@ -87,47 +105,51 @@ export function DoctorChatbotScreen() {
         <ScrollView
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
-          contentContainerStyle={{ paddingHorizontal: 16, paddingTop: 16, paddingBottom: 24, gap: 12 }}
+          contentContainerStyle={styles.messagesScroll}
         >
           {chatMessages.map((msg) => {
             const isUser = msg.sender === 'user';
             return (
               <View
                 key={msg.id}
-                className={`flex-row gap-2 ${isUser ? 'justify-end' : 'justify-start'}`}
+                style={[
+                  styles.messageRow,
+                  isUser ? styles.messageRowUser : styles.messageRowAI,
+                ]}
               >
                 {!isUser && (
-                  <View className="size-8 items-center justify-center rounded-full bg-blue-100 self-end mb-1">
-                    <Bot size={16} color="#2563EB" />
+                  <View style={styles.messageAvatarAI}>
+                    <Bot size={15} color="#0066FE" />
                   </View>
                 )}
 
                 <View
-                  className={`max-w-[82%] rounded-[22px] p-4 shadow-sm ${
-                    isUser
-                      ? 'bg-blue-600 rounded-br-sm'
-                      : 'bg-white border border-slate-100 rounded-bl-sm'
-                  }`}
+                  style={[
+                    styles.messageBubble,
+                    isUser ? styles.bubbleUser : styles.bubbleAI,
+                  ]}
                 >
                   <Text
-                    className={`text-sm leading-relaxed ${
-                      isUser ? 'text-white' : 'text-zinc-800'
-                    }`}
+                    style={[
+                      styles.messageText,
+                      isUser ? styles.messageTextUser : styles.messageTextAI,
+                    ]}
                   >
                     {msg.text}
                   </Text>
                   <Text
-                    className={`text-[10px] mt-1.5 text-right ${
-                      isUser ? 'text-blue-200' : 'text-zinc-400'
-                    }`}
+                    style={[
+                      styles.timestampText,
+                      isUser ? styles.timestampUser : styles.timestampAI,
+                    ]}
                   >
                     {msg.time}
                   </Text>
                 </View>
 
                 {isUser && (
-                  <View className="size-8 items-center justify-center rounded-full bg-blue-600 self-end mb-1">
-                    <User size={16} color="#FFFFFF" />
+                  <View style={styles.messageAvatarUser}>
+                    <User size={15} color="#FFFFFF" />
                   </View>
                 )}
               </View>
@@ -135,34 +157,38 @@ export function DoctorChatbotScreen() {
           })}
 
           {isAiTyping && (
-            <View className="flex-row items-center gap-2 self-start bg-white px-4 py-3 rounded-2xl border border-slate-100 shadow-sm">
-              <ActivityIndicator size="small" color="#2563EB" />
-              <Text className="text-xs text-zinc-500 font-medium">
-                Bác sĩ AI đang xem lại phác đồ điều trị...
+            <View style={styles.typingContainer}>
+              <ActivityIndicator size="small" color="#0066FE" />
+              <Text style={styles.typingText}>
+                Trợ lý AI đang soạn câu trả lời...
               </Text>
             </View>
           )}
         </ScrollView>
 
-        {/* Input Bar */}
-        <View className="p-3 bg-white border-t border-slate-100 flex-row items-center gap-2">
+        {/* Bottom Input Dock */}
+        <View style={styles.inputDock}>
           <TextInput
             value={inputText}
             onChangeText={setInputText}
-            placeholder="Hỏi bác sĩ về liều dùng, tác dụng phụ..."
+            placeholder="Nhắn tin cho Trợ Lý AI..."
             placeholderTextColor="#94A3B8"
-            className="flex-1 bg-slate-50 border border-slate-200 rounded-2xl px-4 py-3 text-sm text-zinc-800"
+            style={styles.textInput}
             onSubmitEditing={() => handleSend()}
             returnKeyType="send"
           />
           <Pressable
             onPress={() => handleSend()}
             disabled={!inputText.trim()}
-            className={`size-11 items-center justify-center rounded-2xl active:scale-[0.95] ${
-              inputText.trim() ? 'bg-blue-600' : 'bg-slate-200'
-            }`}
+            style={[
+              styles.sendButton,
+              { backgroundColor: inputText.trim() ? '#0066FE' : '#E2E8F0' },
+            ]}
           >
-            <Send size={18} color={inputText.trim() ? '#FFFFFF' : '#94A3B8'} />
+            <Send
+              size={18}
+              color={inputText.trim() ? '#FFFFFF' : '#94A3B8'}
+            />
           </Pressable>
         </View>
       </KeyboardAvoidingView>
@@ -175,3 +201,239 @@ export function DoctorChatbotScreen() {
     </SafeAreaView>
   );
 }
+
+const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: '#F5F7FB',
+  },
+  topHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  headerLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  botAvatarBox: {
+    width: 38,
+    height: 38,
+    borderRadius: 14,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  headerTitle: {
+    fontSize: 16,
+    fontWeight: '800',
+    color: '#0F172A',
+  },
+  onlineDot: {
+    width: 7,
+    height: 7,
+    borderRadius: 4,
+    backgroundColor: '#10B981',
+  },
+  headerSub: {
+    fontSize: 11,
+    color: '#94A3B8',
+    marginTop: 1,
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  refreshBtn: {
+    width: 34,
+    height: 34,
+    borderRadius: 17,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  sosBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 16,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+  },
+  sosBtnText: {
+    fontSize: 11,
+    fontWeight: '800',
+    color: '#E11D48',
+  },
+  keyboardContainer: {
+    flex: 1,
+  },
+  suggestionsContainer: {
+    paddingVertical: 8,
+    backgroundColor: '#FFFFFF',
+    borderBottomWidth: 1,
+    borderBottomColor: '#F1F5F9',
+  },
+  suggestionsScroll: {
+    paddingHorizontal: 16,
+    gap: 8,
+  },
+  suggestionChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    borderRadius: 20,
+    backgroundColor: '#EFF6FF',
+    borderWidth: 1,
+    borderColor: '#DBEAFE',
+  },
+  suggestionChipText: {
+    fontSize: 11.5,
+    fontWeight: '700',
+    color: '#0066FE',
+  },
+  messagesScroll: {
+    paddingHorizontal: 16,
+    paddingTop: 16,
+    paddingBottom: 20,
+    gap: 12,
+  },
+  messageRow: {
+    flexDirection: 'row',
+    gap: 8,
+  },
+  messageRowUser: {
+    justifyContent: 'flex-end',
+  },
+  messageRowAI: {
+    justifyContent: 'flex-start',
+  },
+  messageAvatarAI: {
+    width: 30,
+    height: 30,
+    borderRadius: 12,
+    backgroundColor: '#EFF6FF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: 2,
+  },
+  messageAvatarUser: {
+    width: 30,
+    height: 30,
+    borderRadius: 12,
+    backgroundColor: '#0066FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    alignSelf: 'flex-end',
+    marginBottom: 2,
+  },
+  messageBubble: {
+    maxWidth: '80%',
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+    borderRadius: 20,
+    shadowColor: '#000000',
+    shadowOpacity: 0.03,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 6,
+  },
+  bubbleUser: {
+    backgroundColor: '#0066FE',
+    borderBottomRightRadius: 4,
+  },
+  bubbleAI: {
+    backgroundColor: '#FFFFFF',
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+    borderBottomLeftRadius: 4,
+  },
+  messageText: {
+    fontSize: 13.5,
+    lineHeight: 20,
+  },
+  messageTextUser: {
+    color: '#FFFFFF',
+    fontWeight: '500',
+  },
+  messageTextAI: {
+    color: '#0F172A',
+    fontWeight: '400',
+  },
+  timestampText: {
+    fontSize: 9.5,
+    marginTop: 4,
+    textAlign: 'right',
+  },
+  timestampUser: {
+    color: '#BFDBFE',
+  },
+  timestampAI: {
+    color: '#94A3B8',
+  },
+  typingContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    alignSelf: 'flex-start',
+    backgroundColor: '#FFFFFF',
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#F1F5F9',
+  },
+  typingText: {
+    fontSize: 12,
+    color: '#64748B',
+  },
+  inputDock: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    backgroundColor: '#FFFFFF',
+    borderTopWidth: 1,
+    borderTopColor: '#F1F5F9',
+  },
+  textInput: {
+    flex: 1,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#F8FAFC',
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    paddingHorizontal: 16,
+    fontSize: 13.5,
+    color: '#0F172A',
+  },
+  sendButton: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+});
