@@ -1,3 +1,11 @@
+export interface MockItem {
+  id: string;
+  title: string;
+  description: string;
+  createdAt: string;
+  tag?: string;
+}
+
 export interface MedicationItem {
   id: string;
   name: string; // Tên thuốc (VD: Amoxicillin, Paracetamol)

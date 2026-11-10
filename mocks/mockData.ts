@@ -1,4 +1,28 @@
-import { Prescription, ScheduleItem, SymptomLog, UserProfile } from '@/types';
+import { MockItem, Prescription, ScheduleItem, SymptomLog, UserProfile } from '@/types';
+
+export const MOCK_ITEMS: MockItem[] = [
+  {
+    id: '1',
+    title: 'Nhận diện chữ bác sĩ bằng AI OCR',
+    description: 'Chụp ảnh đơn thuốc viết tay, tự động phân tích và cảnh báo tương tác thuốc.',
+    createdAt: new Date().toISOString(),
+    tag: 'OCR Vision',
+  },
+  {
+    id: '2',
+    title: 'Lịch nhắc thuốc thông minh',
+    description: 'Đồng bộ đơn thuốc thành thời gian biểu uống thuốc hằng ngày theo khung giờ.',
+    createdAt: new Date().toISOString(),
+    tag: 'Schedule',
+  },
+  {
+    id: '3',
+    title: 'Đồng hành & Theo dõi triệu chứng',
+    description: 'Bám sát tình trạng người bệnh sau khi uống thuốc, hỗ trợ hỏi đáp y tế cơ bản.',
+    createdAt: new Date().toISOString(),
+    tag: 'Companion',
+  },
+];
 
 export const MOCK_USER: UserProfile = {
   id: 'usr_01',
