@@ -11,20 +11,16 @@ import {
   ScanLine,
   PhoneCall,
   Sparkles,
-  Bot,
   ChevronRight,
-  FileText,
-  ShieldCheck,
   Camera,
   CheckCircle2,
+  FileDown,
 } from 'lucide-react-native';
 import { triggerHaptic } from '@/utils/haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
-import { useRouter } from 'expo-router';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
 
 export function MedexaHomeScreen() {
-  const router = useRouter();
   const { openScanner } = usePrescriptionStore();
   const [showEmergency, setShowEmergency] = useState(false);
 
@@ -49,6 +45,7 @@ export function MedexaHomeScreen() {
           <Pressable
             onPress={() => setShowEmergency(true)}
             style={styles.sosButton}
+            hitSlop={8}
           >
             <PhoneCall size={12} color="#E11D48" />
             <Text style={styles.sosText}>115 Cấp Cứu</Text>
@@ -75,7 +72,7 @@ export function MedexaHomeScreen() {
           </Text>
 
           <Text style={styles.heroDesc}>
-            Chụp ảnh đơn thuốc viết tay hoặc phiếu khám bệnh. Hệ thống AI sẽ tự động đọc chữ bác sĩ, bóc tách danh mục thuốc, dịch sang văn bản in rõ nét và cảnh báo kiêng khem tương tác thuốc.
+            Chụp ảnh đơn thuốc viết tay hoặc phiếu khám bệnh bằng Camera. Hệ thống AI tự động đọc chữ bác sĩ, bóc tách tên thuốc, liều dùng và dịch sang văn bản in rõ nét.
           </Text>
 
           {/* Big CTA Scan Button */}
@@ -87,7 +84,7 @@ export function MedexaHomeScreen() {
             style={styles.heroScanBtn}
           >
             <Camera size={20} color="#FFFFFF" strokeWidth={2.4} />
-            <Text style={styles.heroScanBtnText}>Quét Đơn Thuốc Ngay</Text>
+            <Text style={styles.heroScanBtnText}>Mở Camera Quét Đơn Ngay</Text>
             <ChevronRight size={18} color="#FFFFFF" />
           </Pressable>
         </View>
@@ -103,7 +100,7 @@ export function MedexaHomeScreen() {
             <View style={styles.stepTextBox}>
               <Text style={styles.stepTitle}>Chụp đơn thuốc của bác sĩ</Text>
               <Text style={styles.stepDesc}>
-                Đặt đơn thuốc viết tay vào khung ngắm để AI nhận diện.
+                Dùng Camera chụp trực tiếp hoặc chọn ảnh từ Album để nhận diện.
               </Text>
             </View>
           </View>
@@ -117,7 +114,7 @@ export function MedexaHomeScreen() {
             <View style={styles.stepTextBox}>
               <Text style={styles.stepTitle}>AI tự động dịch sang văn bản in</Text>
               <Text style={styles.stepDesc}>
-                Bóc tách tên thuốc, hàm lượng, số lượng và liều dùng theo cữ.
+                Bóc tách tên thuốc, hàm lượng, số lượng và liều dùng theo cữ sáng/trưa/tối.
               </Text>
             </View>
           </View>
@@ -129,35 +126,21 @@ export function MedexaHomeScreen() {
               <Text style={styles.stepNumberText}>3</Text>
             </View>
             <View style={styles.stepTextBox}>
-              <Text style={styles.stepTitle}>Xuất file PDF / DOCX & Hỏi đáp AI</Text>
+              <Text style={styles.stepTitle}>Xuất file PDF / DOCX & Cảnh báo an toàn</Text>
               <Text style={styles.stepDesc}>
-                Lưu trữ đơn thuốc và trò chuyện trực tiếp cùng Trợ Lý AI.
+                Lưu trữ văn bản in y tế và tự động cảnh báo tương tác thuốc nguy hiểm.
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Quick AI Assistant Card */}
-        <Pressable
-          onPress={() => {
-            triggerHaptic('light');
-            router.navigate('/three');
-          }}
-          style={styles.assistantCard}
-        >
-          <View style={styles.assistantLeft}>
-            <View style={styles.assistantIconBox}>
-              <Bot size={22} color="#0066FE" />
-            </View>
-            <View style={{ flex: 1 }}>
-              <Text style={styles.assistantTitle}>Cần Hỏi Thêm Về Thuốc?</Text>
-              <Text style={styles.assistantSub}>
-                Trò chuyện trực tuyến cùng Trợ Lý AI (Google Gemini)
-              </Text>
-            </View>
-          </View>
-          <ChevronRight size={18} color="#0066FE" />
-        </Pressable>
+        {/* Trust & Medical Safety Badge */}
+        <View style={styles.safetyCard}>
+          <CheckCircle2 size={18} color="#059669" />
+          <Text style={styles.safetyText}>
+            Dữ liệu y tế được xử lý bảo mật trên thiết bị theo chuẩn HIPAA & Bộ Y Tế.
+          </Text>
+        </View>
       </ScrollView>
 
       {/* Emergency 115 Modal */}
@@ -365,44 +348,22 @@ const styles = StyleSheet.create({
     marginVertical: 14,
     marginLeft: 40,
   },
-  assistantCard: {
+  safetyCard: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+    gap: 10,
     marginHorizontal: 16,
-    padding: 16,
-    borderRadius: 22,
-    backgroundColor: '#EFF6FF',
+    padding: 14,
+    borderRadius: 18,
+    backgroundColor: '#F0FDF4',
     borderWidth: 1,
-    borderColor: '#DBEAFE',
+    borderColor: '#DCFCE7',
   },
-  assistantLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
+  safetyText: {
+    fontSize: 12,
+    color: '#166534',
     flex: 1,
-    paddingRight: 8,
-  },
-  assistantIconBox: {
-    width: 44,
-    height: 44,
-    borderRadius: 16,
-    backgroundColor: '#FFFFFF',
-    alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#0066FE',
-    shadowOpacity: 0.15,
-    shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 6,
-  },
-  assistantTitle: {
-    fontSize: 13.5,
-    fontWeight: '800',
-    color: '#1E40AF',
-  },
-  assistantSub: {
-    fontSize: 11,
-    color: '#3B82F6',
-    marginTop: 2,
+    lineHeight: 18,
+    fontWeight: '500',
   },
 });

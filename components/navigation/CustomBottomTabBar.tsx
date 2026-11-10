@@ -1,6 +1,6 @@
 import React, { useCallback } from 'react';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
-import { Home, FileText, Bot, PhoneCall, ScanLine } from 'lucide-react-native';
+import { Home, PhoneCall, ScanLine } from 'lucide-react-native';
 import { triggerHaptic } from '@/utils/haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
 
@@ -12,7 +12,6 @@ export interface CustomBottomTabBarProps {
   descriptors?: Record<string, any>;
   navigation: {
     navigate: (name: string) => void;
-    emit?: (event: any) => { defaultPrevented: boolean };
   };
   onOpenEmergency?: () => void;
 }
@@ -30,31 +29,28 @@ export function CustomBottomTabBar({
     openScanner();
   }, [openScanner]);
 
-  const handleTabPress = useCallback(
-    (routeName: string) => {
-      triggerHaptic('light');
-      if (currentRouteName === routeName) {
-        return; // Already on this tab, avoid re-rendering
-      }
-      navigation.navigate(routeName);
-    },
-    [currentRouteName, navigation]
-  );
+  const handleHomePress = useCallback(() => {
+    triggerHaptic('light');
+    if (currentRouteName !== 'index') {
+      navigation.navigate('index');
+    }
+  }, [currentRouteName, navigation]);
 
-  const homeRoute = state.routes.find((r) => r.name === 'index');
-  const recordsRoute = state.routes.find((r) => r.name === 'two');
-  const botRoute = state.routes.find((r) => r.name === 'three');
+  const handleEmergencyPress = useCallback(() => {
+    triggerHaptic('warning');
+    if (onOpenEmergency) {
+      onOpenEmergency();
+    }
+  }, [onOpenEmergency]);
 
   const isHomeActive = currentRouteName === 'index';
-  const isRecordsActive = currentRouteName === 'two';
-  const isBotActive = currentRouteName === 'three';
 
   return (
     <View style={styles.container}>
       <View style={styles.innerBar}>
-        {/* Tab 1: Home (Trang Chủ) */}
+        {/* Tab 1: Trang Chủ */}
         <Pressable
-          onPress={() => handleTabPress('index')}
+          onPress={handleHomePress}
           style={styles.tabButton}
           hitSlop={8}
         >
@@ -68,35 +64,11 @@ export function CustomBottomTabBar({
               styles.tabLabel,
               {
                 color: isHomeActive ? '#0066FE' : '#94A3B8',
-                fontWeight: isHomeActive ? '700' : '500',
+                fontWeight: isHomeActive ? '700' : '600',
               },
             ]}
           >
             Trang Chủ
-          </Text>
-        </Pressable>
-
-        {/* Tab 2: Records (Bản Dịch) */}
-        <Pressable
-          onPress={() => handleTabPress('two')}
-          style={styles.tabButton}
-          hitSlop={8}
-        >
-          <FileText
-            size={22}
-            color={isRecordsActive ? '#0066FE' : '#94A3B8'}
-            strokeWidth={isRecordsActive ? 2.4 : 2}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              {
-                color: isRecordsActive ? '#0066FE' : '#94A3B8',
-                fontWeight: isRecordsActive ? '700' : '500',
-              },
-            ]}
-          >
-            Bản Dịch
           </Text>
         </Pressable>
 
@@ -109,45 +81,16 @@ export function CustomBottomTabBar({
           >
             <ScanLine size={26} color="#FFFFFF" strokeWidth={2.4} />
           </Pressable>
-          <Text style={styles.scanLabel}>Scan</Text>
+          <Text style={styles.scanLabel}>Quét Đơn</Text>
         </View>
 
-        {/* Tab 3: Trợ Lý (AI Assistant) */}
+        {/* Tab 3: 115 Cấp Cứu */}
         <Pressable
-          onPress={() => handleTabPress('three')}
+          onPress={handleEmergencyPress}
           style={styles.tabButton}
           hitSlop={8}
         >
-          <Bot
-            size={22}
-            color={isBotActive ? '#0066FE' : '#94A3B8'}
-            strokeWidth={isBotActive ? 2.4 : 2}
-          />
-          <Text
-            style={[
-              styles.tabLabel,
-              {
-                color: isBotActive ? '#0066FE' : '#94A3B8',
-                fontWeight: isBotActive ? '700' : '500',
-              },
-            ]}
-          >
-            Trợ Lý
-          </Text>
-        </Pressable>
-
-        {/* Tab 4: 115 SOS Hotline */}
-        <Pressable
-          onPress={() => {
-            triggerHaptic('warning');
-            if (onOpenEmergency) {
-              onOpenEmergency();
-            }
-          }}
-          style={styles.tabButton}
-          hitSlop={8}
-        >
-          <PhoneCall size={22} color="#E11D48" strokeWidth={2} />
+          <PhoneCall size={22} color="#E11D48" strokeWidth={2.2} />
           <Text style={[styles.tabLabel, { color: '#E11D48', fontWeight: '700' }]}>
             115 SOS
           </Text>
@@ -175,18 +118,18 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     height: Platform.OS === 'ios' ? 82 : 64,
     paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-    paddingHorizontal: 8,
+    paddingHorizontal: 20,
     overflow: 'visible',
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: 4,
+    paddingVertical: 6,
   },
   tabLabel: {
-    fontSize: 10.5,
-    marginTop: 3,
+    fontSize: 11,
+    marginTop: 4,
   },
   centerContainer: {
     flex: 1,
@@ -195,9 +138,9 @@ const styles = StyleSheet.create({
     marginTop: -22,
   },
   scanButton: {
-    width: 58,
-    height: 58,
-    borderRadius: 29,
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     backgroundColor: '#0066FE',
     borderWidth: 4,
     borderColor: '#FFFFFF',
@@ -213,6 +156,6 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     color: '#0066FE',
-    marginTop: 2,
+    marginTop: 3,
   },
 });

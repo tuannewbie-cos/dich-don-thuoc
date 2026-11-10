@@ -35,12 +35,27 @@ export default function TabLayout() {
           headerShown: false,
         }}
       >
-        <Tabs.Screen name="index" options={{ title: 'Trang Chủ' }} />
-        <Tabs.Screen name="two" options={{ title: 'Bản Dịch' }} />
-        <Tabs.Screen name="three" options={{ title: 'Trợ Lý' }} />
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: 'Trang Chủ',
+          }}
+        />
+        <Tabs.Screen
+          name="two"
+          options={{
+            href: null, // Hide standalone records tab to prevent lag
+          }}
+        />
+        <Tabs.Screen
+          name="three"
+          options={{
+            href: null, // Hide standalone chatbot tab to prevent lag
+          }}
+        />
       </Tabs>
 
-      {/* Global Prescription Scanner Modal (Triggered by Center Scan Button) */}
+      {/* Global Prescription Scanner Modal (With Camera Integration & Translation View) */}
       <PrescriptionScannerModal
         visible={isScannerOpen}
         onClose={closeScanner}
