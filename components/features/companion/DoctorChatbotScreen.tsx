@@ -5,13 +5,13 @@ import {
   TextInput,
   Pressable,
   ScrollView,
-  SafeAreaView,
   ActivityIndicator,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
   Modal,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { Bot, Send, User, Sparkles, PhoneCall, RefreshCcw, Key, X, Check } from 'lucide-react-native';
 import { triggerHaptic } from '@/utils/haptics';
 import { useCompanionStore } from '@/store/useCompanionStore';

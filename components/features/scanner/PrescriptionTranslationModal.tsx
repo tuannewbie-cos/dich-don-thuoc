@@ -4,10 +4,9 @@ import {
   Text,
   Pressable,
   ScrollView,
-  Modal,
-  SafeAreaView,
   StyleSheet,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   FileText,
   FileDown,
@@ -49,12 +48,7 @@ export function PrescriptionTranslationModal({
   const fileName = `BanDich_DonThuoc_${prescription.id}.${exportFormat?.toLowerCase() || 'pdf'}`;
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="pageSheet"
-      onRequestClose={onClose}
-    >
+    <View style={[StyleSheet.absoluteFill, styles.overlayWrapper]}>
       <SafeAreaView style={styles.safeArea}>
         {/* Top Bar */}
         <View style={styles.topBar}>
@@ -228,11 +222,20 @@ export function PrescriptionTranslationModal({
           onClose={() => setShowEmergency(false)}
         />
       </SafeAreaView>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  overlayWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99999,
+    elevation: 99999,
+  },
   safeArea: {
     flex: 1,
     backgroundColor: '#F5F7FB',

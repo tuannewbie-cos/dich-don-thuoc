@@ -1,5 +1,6 @@
 import React, { useMemo } from 'react';
-import { View, Text, ScrollView, Pressable, SafeAreaView } from 'react-native';
+import { View, Text, ScrollView, Pressable } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { useScheduleStore } from '@/store/useScheduleStore';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
 import { ScheduleHeader } from './ScheduleHeader';

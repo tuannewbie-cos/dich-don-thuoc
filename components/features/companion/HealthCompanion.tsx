@@ -1,5 +1,6 @@
 import React from 'react';
-import { ScrollView, SafeAreaView, View, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { ScrollView, View, Text, Pressable, KeyboardAvoidingView, Platform } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import { CompanionHeader } from './CompanionHeader';
 import { SymptomLogger } from './SymptomLogger';
 import { AIPharmacistChat } from './AIPharmacistChat';

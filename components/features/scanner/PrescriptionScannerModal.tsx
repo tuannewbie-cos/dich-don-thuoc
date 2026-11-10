@@ -3,12 +3,11 @@ import {
   View,
   Text,
   Pressable,
-  Modal,
-  SafeAreaView,
   ScrollView,
   StyleSheet,
   ActivityIndicator,
 } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
 import {
   X,
   ScanLine,
@@ -86,12 +85,7 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
     : '';
 
   return (
-    <Modal
-      visible={visible}
-      animationType="slide"
-      presentationStyle="fullScreen"
-      onRequestClose={handleClose}
-    >
+    <View style={[StyleSheet.absoluteFill, styles.overlayWrapper]}>
       <SafeAreaView
         style={[
           styles.safeArea,
@@ -385,11 +379,20 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
           onClose={() => setShowEmergency(false)}
         />
       </SafeAreaView>
-    </Modal>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  overlayWrapper: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99999,
+    elevation: 99999,
+  },
   safeArea: {
     flex: 1,
   },
