@@ -13,7 +13,7 @@ import {
   Modal,
 } from 'react-native';
 import { Bot, Send, User, Sparkles, PhoneCall, RefreshCcw, Key, X, Check } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 import { useCompanionStore } from '@/store/useCompanionStore';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
 
@@ -47,7 +47,7 @@ export function DoctorChatbotScreen() {
   };
 
   const handleSaveKey = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    triggerHaptic('success');
     setGeminiApiKey(keyInput.trim());
     setShowKeyModal(false);
   };
@@ -73,7 +73,7 @@ export function DoctorChatbotScreen() {
           {/* Key Button */}
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              triggerHaptic('light');
               setKeyInput(geminiApiKey);
               setShowKeyModal(true);
             }}
@@ -85,7 +85,7 @@ export function DoctorChatbotScreen() {
           {/* Reset Chat Button */}
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              triggerHaptic('light');
               resetDefault();
             }}
             style={styles.refreshBtn}
@@ -120,7 +120,7 @@ export function DoctorChatbotScreen() {
               <Pressable
                 key={idx}
                 onPress={() => {
-                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  triggerHaptic('light');
                   handleSend(s);
                 }}
                 style={styles.suggestionChip}
@@ -224,9 +224,13 @@ export function DoctorChatbotScreen() {
         </View>
       </KeyboardAvoidingView>
 
-      {/* Google AI Studio API Key Modal */}
-      <Modal visible={showKeyModal} transparent animationType="fade" onRequestClose={() => setShowKeyModal(false)}>
+      {/* Google AI Studio API Key Modal (Zero-crash Overlay) */}
+      {showKeyModal && (
         <View style={styles.modalBackdrop}>
+          <Pressable
+            style={StyleSheet.absoluteFill}
+            onPress={() => setShowKeyModal(false)}
+          />
           <View style={styles.modalBox}>
             <View style={styles.modalHeader}>
               <View style={styles.keyIconCircle}>
@@ -259,7 +263,7 @@ export function DoctorChatbotScreen() {
             </View>
           </View>
         </View>
-      </Modal>
+      )}
 
       {/* Emergency 115 Modal */}
       <EmergencyCallModal
@@ -515,7 +519,12 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   modalBackdrop: {
-    flex: 1,
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 9999,
     backgroundColor: 'rgba(0,0,0,0.5)',
     alignItems: 'center',
     justifyContent: 'center',

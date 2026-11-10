@@ -2,7 +2,7 @@ import { create } from 'zustand';
 import { SymptomLog } from '@/types';
 import { MOCK_SYMPTOM_LOGS } from '@/mocks/mockData';
 import { callGeminiAI } from '@/services/gemini';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 
 export interface ChatMessage {
   id: string;
@@ -42,7 +42,7 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
   geminiApiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
 
   addSymptomLog: (feeling, symptoms, notes) => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    triggerHaptic('success');
     const alertLevel: 'low' | 'medium' | 'high' =
       feeling === 'unwell' ? 'high' : feeling === 'moderate' ? 'medium' : 'low';
 
@@ -66,7 +66,7 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
 
   sendChatMessage: async (text: string) => {
     if (!text.trim()) return;
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    triggerHaptic('light');
 
     const now = new Date();
     const timeStr = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
@@ -99,7 +99,7 @@ export const useCompanionStore = create<CompanionState>((set, get) => ({
         chatMessages: [...state.chatMessages, aiMsg],
         isAiTyping: false,
       }));
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      triggerHaptic('success');
     } catch (err) {
       set({ isAiTyping: false });
     }

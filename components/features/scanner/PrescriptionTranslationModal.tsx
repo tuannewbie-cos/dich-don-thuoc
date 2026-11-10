@@ -6,22 +6,20 @@ import {
   ScrollView,
   Modal,
   SafeAreaView,
-  Image,
   StyleSheet,
 } from 'react-native';
 import {
   FileText,
   FileDown,
   PhoneCall,
-  Bot,
   ShieldAlert,
   X,
   Stethoscope,
   Building2,
   Pill,
-  ArrowRight,
+  CheckCircle2,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 import { Prescription } from '@/types';
 import { ExportSuccessModal } from '@/components/ui/ExportSuccessModal';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
@@ -37,22 +35,26 @@ export function PrescriptionTranslationModal({
   visible,
   prescription,
   onClose,
-  onOpenChatbot,
 }: PrescriptionTranslationModalProps) {
   const [exportFormat, setExportFormat] = useState<'PDF' | 'DOCX' | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
 
-  if (!prescription) return null;
+  if (!visible || !prescription) return null;
 
   const handleExport = (format: 'PDF' | 'DOCX') => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    triggerHaptic('success');
     setExportFormat(format);
   };
 
   const fileName = `BanDich_DonThuoc_${prescription.id}.${exportFormat?.toLowerCase() || 'pdf'}`;
 
   return (
-    <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
+    <Modal
+      visible={visible}
+      animationType="slide"
+      presentationStyle="pageSheet"
+      onRequestClose={onClose}
+    >
       <SafeAreaView style={styles.safeArea}>
         {/* Top Bar */}
         <View style={styles.topBar}>
@@ -70,10 +72,11 @@ export function PrescriptionTranslationModal({
 
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+              triggerHaptic('light');
               onClose();
             }}
             style={styles.closeBtn}
+            hitSlop={10}
           >
             <X size={18} color="#64748B" />
           </Pressable>
@@ -89,7 +92,7 @@ export function PrescriptionTranslationModal({
               onPress={() => handleExport('PDF')}
               style={[styles.actionBtn, styles.actionBtnPdf]}
             >
-              <FileDown size={16} color="#FFFFFF" strokeWidth={2.4} />
+              <FileDown size={15} color="#FFFFFF" strokeWidth={2.4} />
               <Text style={styles.actionBtnText}>Xuất PDF</Text>
             </Pressable>
 
@@ -97,128 +100,116 @@ export function PrescriptionTranslationModal({
               onPress={() => handleExport('DOCX')}
               style={[styles.actionBtn, styles.actionBtnDocx]}
             >
-              <FileDown size={16} color="#FFFFFF" strokeWidth={2.4} />
+              <FileDown size={15} color="#FFFFFF" strokeWidth={2.4} />
               <Text style={styles.actionBtnText}>Xuất DOCX</Text>
             </Pressable>
 
             <Pressable
               onPress={() => setShowEmergency(true)}
-              style={styles.sosActionBtn}
+              style={[styles.actionBtn, styles.actionBtnSos]}
             >
-              <PhoneCall size={16} color="#E11D48" />
-              <Text style={styles.sosActionText}>Gọi 115</Text>
+              <PhoneCall size={15} color="#FFFFFF" strokeWidth={2.4} />
+              <Text style={styles.actionBtnText}>115 SOS</Text>
             </Pressable>
           </View>
 
-          {/* Scanned Original Photo Comparison */}
-          {prescription.imageUrl && (
-            <View style={styles.card}>
-              <View style={styles.cardHeaderSmall}>
-                <Text style={styles.cardSectionTag}>Ảnh Chụp Đơn Viết Tay Bác Sĩ</Text>
-                <View style={styles.confidenceBadge}>
-                  <Text style={styles.confidenceText}>Độ tin cậy 99.4%</Text>
-                </View>
-              </View>
-              <Image
-                source={{ uri: prescription.imageUrl }}
-                style={styles.originalImage}
-                resizeMode="cover"
-              />
-            </View>
-          )}
-
-          {/* Hospital & Doctor Metadata Card */}
-          <View style={styles.card}>
-            <View style={styles.doctorHeader}>
-              <View style={styles.doctorIconBox}>
+          {/* Doctor & Hospital Card */}
+          <View style={styles.doctorCard}>
+            <View style={styles.doctorHeaderRow}>
+              <View style={styles.doctorAvatar}>
                 <Stethoscope size={22} color="#0066FE" />
               </View>
               <View style={{ flex: 1 }}>
-                <Text style={styles.doctorName}>{prescription.doctorName}</Text>
+                <Text style={styles.diagnosisTitle}>
+                  {prescription.diagnosis}
+                </Text>
+                <Text style={styles.doctorMeta}>
+                  Bác sĩ điều trị: {prescription.doctorName}
+                </Text>
                 <View style={styles.hospitalRow}>
-                  <Building2 size={12} color="#64748B" />
-                  <Text style={styles.hospitalText} numberOfLines={1}>
-                    {prescription.hospital}
-                  </Text>
+                  <Building2 size={13} color="#64748B" />
+                  <Text style={styles.hospitalText}>{prescription.hospital}</Text>
                 </View>
               </View>
             </View>
 
-            {/* Diagnosis */}
-            <View style={styles.diagnosisSection}>
-              <Text style={styles.cardSectionTag}>Chẩn Đoán Lâm Sàng</Text>
-              <View style={styles.diagnosisBox}>
-                <Text style={styles.diagnosisText}>{prescription.diagnosis}</Text>
+            <View style={styles.divider} />
+
+            <View style={styles.doctorFooterRow}>
+              <Text style={styles.footerDateText}>
+                Ngày khám: {prescription.scanDate}
+              </Text>
+              <View style={styles.verifiedTag}>
+                <CheckCircle2 size={13} color="#059669" />
+                <Text style={styles.verifiedTagText}>Độ chính xác: 98%</Text>
               </View>
             </View>
           </View>
 
-          {/* Safety Warnings Banner */}
+          {/* Prescription Medications List */}
+          <View style={styles.medsCard}>
+            <View style={styles.medsHeader}>
+              <View style={styles.medsIconBox}>
+                <Pill size={16} color="#0066FE" />
+              </View>
+              <Text style={styles.medsTitle}>
+                Danh Mục Thuốc Đã Dịch ({prescription.medications.length} loại)
+              </Text>
+            </View>
+
+            <View style={styles.medsList}>
+              {prescription.medications.map((item, idx) => (
+                <View key={item.id} style={styles.medItem}>
+                  <View style={styles.medItemTop}>
+                    <View style={styles.medNumber}>
+                      <Text style={styles.medNumberText}>{idx + 1}</Text>
+                    </View>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.medNameText}>{item.name}</Text>
+                      <Text style={styles.medDosageText}>
+                        Liều lượng: {item.dosage} • Số lượng: {item.quantity}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.instructionsBox}>
+                    <Text style={styles.instructionsText}>
+                      👉 Hướng dẫn: {item.instruction}
+                    </Text>
+                  </View>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Drug Interactions & Cautions */}
           {prescription.safetyNotes && prescription.safetyNotes.length > 0 && (
             <View style={styles.warningCard}>
               <View style={styles.warningHeader}>
                 <ShieldAlert size={18} color="#D97706" />
-                <Text style={styles.warningTitle}>Cảnh Báo An Toàn & Kiêng Khem</Text>
+                <Text style={styles.warningTitle}>
+                  Lưu Ý & Cảnh Báo Tương Tác Thuốc
+                </Text>
               </View>
-              {prescription.safetyNotes.map((note, idx) => (
-                <Text key={idx} style={styles.warningText}>
-                  • {note}
+              {prescription.safetyNotes.map((warn: string, i: number) => (
+                <Text key={i} style={styles.warningItem}>
+                  • {warn}
                 </Text>
               ))}
             </View>
           )}
 
-          {/* Translated Medications Table */}
-          <View style={styles.card}>
-            <View style={styles.medsHeader}>
-              <View style={styles.medsHeaderLeft}>
-                <Pill size={18} color="#0066FE" />
-                <Text style={styles.medsTitle}>
-                  Danh Mục Thuốc Đã Dịch ({prescription.medications.length} loại)
-                </Text>
-              </View>
-              <Text style={styles.medsSub}>Chuẩn GPP</Text>
-            </View>
-
-            <View style={styles.medsList}>
-              {prescription.medications.map((med, index) => (
-                <View key={med.id || index} style={styles.medItem}>
-                  <View style={styles.medItemHeader}>
-                    <View style={styles.medNameRow}>
-                      <View style={styles.medIndexBadge}>
-                        <Text style={styles.medIndexText}>{index + 1}</Text>
-                      </View>
-                      <Text style={styles.medNameText}>{med.name}</Text>
-                    </View>
-                    <View style={styles.medDosageBadge}>
-                      <Text style={styles.medDosageText}>{med.dosage}</Text>
-                    </View>
-                  </View>
-
-                  <Text style={styles.medInstructionText}>
-                    Số lượng: <Text style={{ fontWeight: '800', color: '#0F172A' }}>{med.quantity}</Text> • {med.instruction}
-                  </Text>
-
-                  {/* Time slots badges */}
-                  <View style={styles.slotsRow}>
-                    {med.timeSlots.map((slot) => {
-                      const labels: Record<string, string> = {
-                        morning: 'Sáng',
-                        noon: 'Trưa',
-                        evening: 'Chiều',
-                        night: 'Tối',
-                      };
-                      return (
-                        <View key={slot} style={styles.slotBadge}>
-                          <Text style={styles.slotText}>{labels[slot] || slot}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
-                </View>
-              ))}
-            </View>
-          </View>
+          {/* Close button */}
+          <Pressable
+            onPress={() => {
+              triggerHaptic('light');
+              onClose();
+            }}
+            style={styles.doneBtn}
+          >
+            <CheckCircle2 size={16} color="#FFFFFF" strokeWidth={2.4} />
+            <Text style={styles.doneBtnText}>Đóng Bản Dịch</Text>
+          </Pressable>
         </ScrollView>
 
         {/* Export Success Modal */}
@@ -231,7 +222,7 @@ export function PrescriptionTranslationModal({
           />
         )}
 
-        {/* Emergency 115 Modal */}
+        {/* Emergency Modal */}
         <EmergencyCallModal
           visible={showEmergency}
           onClose={() => setShowEmergency(false)}
@@ -250,7 +241,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
+    paddingHorizontal: 18,
     paddingVertical: 14,
     backgroundColor: '#FFFFFF',
     borderBottomWidth: 1,
@@ -265,38 +256,37 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 12,
-    backgroundColor: '#EFF6FF',
+    backgroundColor: 'rgba(0, 102, 254, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
   headerTitle: {
-    fontSize: 15,
+    fontSize: 16,
     fontWeight: '800',
     color: '#0F172A',
   },
   headerSub: {
     fontSize: 11,
     color: '#059669',
-    fontWeight: '600',
     marginTop: 1,
+    fontWeight: '600',
   },
   closeBtn: {
-    width: 34,
-    height: 34,
-    borderRadius: 17,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
   },
   scrollContent: {
-    paddingHorizontal: 16,
-    paddingTop: 16,
+    padding: 16,
     paddingBottom: 40,
   },
   actionRow: {
     flexDirection: 'row',
-    gap: 8,
-    marginBottom: 14,
+    gap: 10,
+    marginBottom: 16,
   },
   actionBtn: {
     flex: 1,
@@ -304,250 +294,231 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     gap: 6,
-    paddingVertical: 13,
-    borderRadius: 18,
-    shadowOpacity: 0.2,
-    shadowRadius: 6,
-    shadowOffset: { width: 0, height: 3 },
+    paddingVertical: 12,
+    borderRadius: 16,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+    elevation: 3,
   },
   actionBtnPdf: {
+    backgroundColor: '#DC2626',
+    shadowColor: '#DC2626',
+  },
+  actionBtnDocx: {
     backgroundColor: '#0066FE',
     shadowColor: '#0066FE',
   },
-  actionBtnDocx: {
-    backgroundColor: '#4F46E5',
-    shadowColor: '#4F46E5',
+  actionBtnSos: {
+    backgroundColor: '#E11D48',
+    shadowColor: '#E11D48',
   },
   actionBtnText: {
-    fontSize: 12.5,
+    fontSize: 13,
     fontWeight: '800',
     color: '#FFFFFF',
   },
-  sosActionBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    paddingHorizontal: 14,
-    paddingVertical: 13,
-    borderRadius: 18,
-    backgroundColor: '#FFF1F2',
-    borderWidth: 1,
-    borderColor: '#FECDD3',
-  },
-  sosActionText: {
-    fontSize: 12.5,
-    fontWeight: '800',
-    color: '#E11D48',
-  },
-  card: {
-    marginBottom: 14,
-    borderRadius: 26,
+  doctorCard: {
     backgroundColor: '#FFFFFF',
+    borderRadius: 24,
     padding: 18,
     borderWidth: 1,
-    borderColor: '#F1F5F9',
+    borderColor: '#E2E8F0',
+    marginBottom: 14,
     shadowColor: '#000000',
-    shadowOpacity: 0.03,
-    shadowOffset: { width: 0, height: 4 },
-    shadowRadius: 16,
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
-  cardHeaderSmall: {
+  doctorHeaderRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 8,
-  },
-  cardSectionTag: {
-    fontSize: 11,
-    fontWeight: '700',
-    color: '#94A3B8',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    marginBottom: 6,
-  },
-  confidenceBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    backgroundColor: '#EFF6FF',
-  },
-  confidenceText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#0066FE',
-  },
-  originalImage: {
-    width: '100%',
-    height: 140,
-    borderRadius: 16,
-    backgroundColor: '#F1F5F9',
-  },
-  doctorHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 12,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
   },
-  doctorIconBox: {
+  doctorAvatar: {
     width: 44,
     height: 44,
-    borderRadius: 18,
-    backgroundColor: '#EFF6FF',
+    borderRadius: 16,
+    backgroundColor: 'rgba(0, 102, 254, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  doctorName: {
-    fontSize: 15,
+  diagnosisTitle: {
+    fontSize: 17,
     fontWeight: '800',
     color: '#0F172A',
+  },
+  doctorMeta: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: '#475569',
+    marginTop: 2,
   },
   hospitalRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
-    marginTop: 2,
+    marginTop: 3,
   },
   hospitalText: {
-    fontSize: 11.5,
+    fontSize: 12,
     color: '#64748B',
   },
-  diagnosisSection: {
-    paddingTop: 12,
+  divider: {
+    height: 1,
+    backgroundColor: '#F1F5F9',
+    marginVertical: 14,
   },
-  diagnosisBox: {
-    padding: 12,
-    borderRadius: 16,
-    backgroundColor: '#EFF6FF',
-    borderWidth: 1,
-    borderColor: '#DBEAFE',
-  },
-  diagnosisText: {
-    fontSize: 13,
-    fontWeight: '800',
-    color: '#1E40AF',
-  },
-  warningCard: {
-    marginBottom: 14,
-    borderRadius: 24,
-    backgroundColor: '#FFFBEB',
-    padding: 16,
-    borderWidth: 1,
-    borderColor: '#FDE68A',
-  },
-  warningHeader: {
+  doctorFooterRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 8,
-    marginBottom: 8,
+    justifyContent: 'space-between',
   },
-  warningTitle: {
+  footerDateText: {
     fontSize: 12,
-    fontWeight: '800',
-    color: '#92400E',
-    textTransform: 'uppercase',
+    color: '#64748B',
+    fontWeight: '500',
   },
-  warningText: {
-    fontSize: 12,
-    color: '#92400E',
-    lineHeight: 18,
-    marginBottom: 4,
+  verifiedTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: '#ECFDF5',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 10,
+  },
+  verifiedTagText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#059669',
+  },
+  medsCard: {
+    backgroundColor: '#FFFFFF',
+    borderRadius: 24,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+    marginBottom: 14,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
   },
   medsHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingBottom: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#F1F5F9',
-    marginBottom: 12,
-  },
-  medsHeaderLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
     gap: 8,
+    marginBottom: 14,
   },
-  medsTitle: {
-    fontSize: 14,
-    fontWeight: '800',
-    color: '#0F172A',
-  },
-  medsSub: {
-    fontSize: 11,
-    color: '#94A3B8',
-  },
-  medsList: {
-    gap: 10,
-  },
-  medItem: {
-    padding: 14,
-    borderRadius: 18,
-    backgroundColor: '#F8FAFC',
-    borderWidth: 1,
-    borderColor: '#E2E8F0',
-  },
-  medItemHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    marginBottom: 6,
-  },
-  medNameRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-  },
-  medIndexBadge: {
-    width: 22,
-    height: 22,
-    borderRadius: 8,
-    backgroundColor: '#DBEAFE',
+  medsIconBox: {
+    width: 32,
+    height: 32,
+    borderRadius: 10,
+    backgroundColor: 'rgba(0, 102, 254, 0.1)',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  medIndexText: {
-    fontSize: 11,
+  medsTitle: {
+    fontSize: 15,
     fontWeight: '800',
-    color: '#1D4ED8',
+    color: '#0F172A',
+  },
+  medsList: {
+    gap: 12,
+  },
+  medItem: {
+    backgroundColor: '#F8FAFC',
+    borderRadius: 18,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: '#E2E8F0',
+  },
+  medItemTop: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
+  },
+  medNumber: {
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    backgroundColor: '#0066FE',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 1,
+  },
+  medNumberText: {
+    fontSize: 12,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
   medNameText: {
     fontSize: 14,
     fontWeight: '800',
     color: '#0F172A',
   },
-  medDosageBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 12,
-    backgroundColor: '#DBEAFE',
-  },
   medDosageText: {
-    fontSize: 11,
-    fontWeight: '800',
-    color: '#1E40AF',
-  },
-  medInstructionText: {
     fontSize: 12,
     color: '#475569',
-    lineHeight: 18,
+    marginTop: 2,
+    fontWeight: '600',
   },
-  slotsRow: {
-    flexDirection: 'row',
-    gap: 6,
+  instructionsBox: {
     marginTop: 8,
+    paddingTop: 8,
+    borderTopWidth: 1,
+    borderTopColor: '#E2E8F0',
   },
-  slotBadge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
-    backgroundColor: '#FFFFFF',
+  instructionsText: {
+    fontSize: 12,
+    color: '#0369A1',
+    fontWeight: '600',
+  },
+  warningCard: {
+    backgroundColor: '#FFFBEB',
+    borderRadius: 22,
+    padding: 16,
     borderWidth: 1,
-    borderColor: '#E2E8F0',
+    borderColor: '#FDE68A',
+    marginBottom: 16,
   },
-  slotText: {
-    fontSize: 10,
-    fontWeight: '700',
-    color: '#475569',
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 8,
+  },
+  warningTitle: {
+    fontSize: 13,
+    fontWeight: '800',
+    color: '#92400E',
+  },
+  warningItem: {
+    fontSize: 12,
+    color: '#78350F',
+    lineHeight: 18,
+    marginTop: 4,
+  },
+  doneBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: 14,
+    borderRadius: 18,
+    backgroundColor: '#0066FE',
+    shadowColor: '#0066FE',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+    marginTop: 4,
+  },
+  doneBtnText: {
+    fontSize: 14,
+    fontWeight: '800',
+    color: '#FFFFFF',
   },
 });

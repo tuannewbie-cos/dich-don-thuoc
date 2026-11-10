@@ -18,7 +18,7 @@ import {
   Camera,
   CheckCircle2,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
 import { useRouter } from 'expo-router';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
@@ -81,7 +81,7 @@ export function MedexaHomeScreen() {
           {/* Big CTA Scan Button */}
           <Pressable
             onPress={() => {
-              Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+              triggerHaptic('medium');
               openScanner();
             }}
             style={styles.heroScanBtn}
@@ -140,7 +140,7 @@ export function MedexaHomeScreen() {
         {/* Quick AI Assistant Card */}
         <Pressable
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            triggerHaptic('light');
             router.navigate('/three');
           }}
           style={styles.assistantCard}

@@ -18,7 +18,7 @@ import {
   FileQuestion,
   Sparkles,
 } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
 import { ExportSuccessModal } from '@/components/ui/ExportSuccessModal';
 import { EmergencyCallModal } from '@/components/ui/EmergencyCallModal';
@@ -38,7 +38,7 @@ export function PrescriptionRecordsScreen() {
     : scannedHistory[0] || null;
 
   const handleExport = (format: 'PDF' | 'DOCX') => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    triggerHaptic('success');
     setExportFormat(format);
   };
 
@@ -89,7 +89,7 @@ export function PrescriptionRecordsScreen() {
 
             <Pressable
               onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+                triggerHaptic('medium');
                 openScanner();
               }}
               style={styles.emptyScanBtn}
@@ -132,7 +132,7 @@ export function PrescriptionRecordsScreen() {
                     <Pressable
                       key={rx.id}
                       onPress={() => {
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                        triggerHaptic('light');
                         setSelectedRx(rx);
                       }}
                       style={[

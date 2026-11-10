@@ -1,7 +1,7 @@
 import React from 'react';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import { Home, FileText, Bot, PhoneCall, ScanLine } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 import { usePrescriptionStore } from '@/store/usePrescriptionStore';
 
 export interface CustomBottomTabBarProps {
@@ -12,64 +12,73 @@ export interface CustomBottomTabBarProps {
   descriptors?: Record<string, any>;
   navigation: {
     navigate: (name: string) => void;
+    emit?: (event: any) => { defaultPrevented: boolean };
   };
   onOpenEmergency?: () => void;
 }
 
-export function CustomBottomTabBar({ state, descriptors, navigation, onOpenEmergency }: CustomBottomTabBarProps) {
+export function CustomBottomTabBar({
+  state,
+  navigation,
+  onOpenEmergency,
+}: CustomBottomTabBarProps) {
   const { openScanner } = usePrescriptionStore();
   const currentRouteName = state.routes[state.index]?.name;
 
   const handleScanPress = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    triggerHaptic('medium');
     openScanner();
   };
 
-  const tabs = [
-    {
-      name: 'index',
-      label: 'Trang Chủ',
-      icon: Home,
-    },
-    {
-      name: 'two',
-      label: 'Bản Dịch',
-      icon: FileText,
-    },
-    // Center is Scan Button
-    {
-      name: 'three',
-      label: 'Trợ Lý',
-      icon: Bot,
-    },
-    {
-      name: 'emergency',
-      label: '115 SOS',
-      icon: PhoneCall,
-      isAction: true,
-    },
-  ];
+  const handleTabPress = (routeName: string, targetKey?: string) => {
+    triggerHaptic('light');
+    if (currentRouteName === routeName) {
+      return; // Already on this tab, avoid re-rendering
+    }
+
+    if (navigation.emit && targetKey) {
+      const event = navigation.emit({
+        type: 'tabPress',
+        target: targetKey,
+        canPreventDefault: true,
+      });
+      if (!event.defaultPrevented) {
+        navigation.navigate(routeName);
+      }
+    } else {
+      navigation.navigate(routeName);
+    }
+  };
+
+  const homeRoute = state.routes.find((r) => r.name === 'index');
+  const recordsRoute = state.routes.find((r) => r.name === 'two');
+  const botRoute = state.routes.find((r) => r.name === 'three');
+
+  const isHomeActive = currentRouteName === 'index';
+  const isRecordsActive = currentRouteName === 'two';
+  const isBotActive = currentRouteName === 'three';
 
   return (
     <View style={styles.container}>
       <View style={styles.innerBar}>
-        {/* Tab 1: Home */}
+        {/* Tab 1: Home (Trang Chủ) */}
         <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.navigate('index');
-          }}
+          onPress={() => handleTabPress('index', homeRoute?.key)}
           style={styles.tabButton}
+          hitSlop={8}
         >
           <Home
             size={22}
-            color={currentRouteName === 'index' ? '#0066FE' : '#94A3B8'}
-            strokeWidth={currentRouteName === 'index' ? 2.4 : 2}
+            color={isHomeActive ? '#0066FE' : '#94A3B8'}
+            strokeWidth={isHomeActive ? 2.4 : 2}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: currentRouteName === 'index' ? '#0066FE' : '#94A3B8', fontWeight: currentRouteName === 'index' ? '700' : '500' },
+              {
+                color: isHomeActive ? '#0066FE' : '#94A3B8',
+                fontWeight: isHomeActive ? '700' : '500',
+              },
             ]}
           >
             Trang Chủ
@@ -78,21 +87,22 @@ export function CustomBottomTabBar({ state, descriptors, navigation, onOpenEmerg
 
         {/* Tab 2: Records (Bản Dịch) */}
         <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.navigate('two');
-          }}
+          onPress={() => handleTabPress('two', recordsRoute?.key)}
           style={styles.tabButton}
+          hitSlop={8}
         >
           <FileText
             size={22}
-            color={currentRouteName === 'two' ? '#0066FE' : '#94A3B8'}
-            strokeWidth={currentRouteName === 'two' ? 2.4 : 2}
+            color={isRecordsActive ? '#0066FE' : '#94A3B8'}
+            strokeWidth={isRecordsActive ? 2.4 : 2}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: currentRouteName === 'two' ? '#0066FE' : '#94A3B8', fontWeight: currentRouteName === 'two' ? '700' : '500' },
+              {
+                color: isRecordsActive ? '#0066FE' : '#94A3B8',
+                fontWeight: isRecordsActive ? '700' : '500',
+              },
             ]}
           >
             Bản Dịch
@@ -101,7 +111,11 @@ export function CustomBottomTabBar({ state, descriptors, navigation, onOpenEmerg
 
         {/* Center: FLOATING ELEVATED SCAN BUTTON */}
         <View style={styles.centerContainer}>
-          <Pressable onPress={handleScanPress} style={styles.scanButton}>
+          <Pressable
+            onPress={handleScanPress}
+            style={styles.scanButton}
+            hitSlop={10}
+          >
             <ScanLine size={26} color="#FFFFFF" strokeWidth={2.4} />
           </Pressable>
           <Text style={styles.scanLabel}>Scan</Text>
@@ -109,21 +123,22 @@ export function CustomBottomTabBar({ state, descriptors, navigation, onOpenEmerg
 
         {/* Tab 3: Trợ Lý (AI Assistant) */}
         <Pressable
-          onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-            navigation.navigate('three');
-          }}
+          onPress={() => handleTabPress('three', botRoute?.key)}
           style={styles.tabButton}
+          hitSlop={8}
         >
           <Bot
             size={22}
-            color={currentRouteName === 'three' ? '#0066FE' : '#94A3B8'}
-            strokeWidth={currentRouteName === 'three' ? 2.4 : 2}
+            color={isBotActive ? '#0066FE' : '#94A3B8'}
+            strokeWidth={isBotActive ? 2.4 : 2}
           />
           <Text
             style={[
               styles.tabLabel,
-              { color: currentRouteName === 'three' ? '#0066FE' : '#94A3B8', fontWeight: currentRouteName === 'three' ? '700' : '500' },
+              {
+                color: isBotActive ? '#0066FE' : '#94A3B8',
+                fontWeight: isBotActive ? '700' : '500',
+              },
             ]}
           >
             Trợ Lý
@@ -133,12 +148,13 @@ export function CustomBottomTabBar({ state, descriptors, navigation, onOpenEmerg
         {/* Tab 4: 115 SOS Hotline */}
         <Pressable
           onPress={() => {
-            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+            triggerHaptic('warning');
             if (onOpenEmergency) {
               onOpenEmergency();
             }
           }}
           style={styles.tabButton}
+          hitSlop={8}
         >
           <PhoneCall size={22} color="#E11D48" strokeWidth={2} />
           <Text style={[styles.tabLabel, { color: '#E11D48', fontWeight: '700' }]}>

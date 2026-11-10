@@ -1,7 +1,7 @@
 import React from 'react';
-import { View, Text, Pressable, Modal, Alert, Linking, Platform } from 'react-native';
+import { View, Text, Pressable, Alert, Linking, StyleSheet } from 'react-native';
 import { PhoneCall, ShieldAlert, X } from 'lucide-react-native';
-import * as Haptics from 'expo-haptics';
+import { triggerHaptic } from '@/utils/haptics';
 
 interface EmergencyCallModalProps {
   visible: boolean;
@@ -9,73 +9,191 @@ interface EmergencyCallModalProps {
 }
 
 export function EmergencyCallModal({ visible, onClose }: EmergencyCallModalProps) {
+  if (!visible) return null;
+
   const handleCall = () => {
-    Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning);
+    triggerHaptic('warning');
     const phoneNumber = 'tel:115';
     Linking.canOpenURL(phoneNumber)
       .then((supported) => {
         if (supported) {
           Linking.openURL(phoneNumber);
         } else {
-          Alert.alert('Gọi 115 Khẩn Cấp', 'Đang kết nối tới Trung tâm Cấp cứu 115...');
+          Alert.alert('Gọi 115 Cấp Cứu', 'Đang kết nối tới Trung tâm Cấp cứu 115...');
         }
       })
       .catch(() => {
-        Alert.alert('Gọi 115 Khẩn Cấp', 'Đang kết nối tới Trung tâm Cấp cứu 115...');
+        Alert.alert('Gọi 115 Cấp Cứu', 'Đang kết nối tới Trung tâm Cấp cứu 115...');
       });
     onClose();
   };
 
   return (
-    <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
-      <View className="flex-1 bg-black/60 items-center justify-center px-5">
-        <View className="w-full max-w-sm rounded-[32px] bg-white p-6 shadow-2xl border border-rose-100">
-          {/* Header */}
-          <View className="items-center mb-4">
-            <View className="size-16 items-center justify-center rounded-3xl bg-rose-50 border border-rose-100 mb-3">
-              <PhoneCall size={32} color="#E11D48" />
-            </View>
-            <Text className="text-xl font-bold text-zinc-900">Tổng Đài Cấp Cứu 115</Text>
-            <Text className="text-xs text-rose-600 font-semibold mt-0.5">
-              Đường dây nóng y tế khẩn cấp toàn quốc
-            </Text>
+    <View style={styles.overlayContainer}>
+      <Pressable style={styles.backdrop} onPress={onClose} />
+      <View style={styles.dialogCard}>
+        {/* Header */}
+        <View style={styles.header}>
+          <View style={styles.iconBox}>
+            <PhoneCall size={30} color="#E11D48" />
           </View>
+          <Text style={styles.title}>Tổng Đài Cấp Cứu 115</Text>
+          <Text style={styles.subTitle}>
+            Đường dây nóng y tế khẩn cấp toàn quốc 24/7
+          </Text>
+        </View>
 
-          {/* Description */}
-          <View className="p-3.5 rounded-2xl bg-rose-50/70 border border-rose-200/60 mb-5">
-            <View className="flex-row items-center gap-2 mb-1">
-              <ShieldAlert size={16} color="#BE123C" />
-              <Text className="text-xs font-bold text-rose-900">Khi nào cần gọi 115?</Text>
-            </View>
-            <Text className="text-xs text-rose-800 leading-relaxed">
-              • Xuất hiện khó thở dữ dội, tím tái sau khi uống thuốc.{'\n'}
-              • Sốc phản vệ, sưng phù môi/mặt hoặc phát ban toàn thân.{'\n'}
-              • Co giật hoặc mất ý thức đột ngột.
-            </Text>
+        {/* Cảnh báo khi nào cần gọi */}
+        <View style={styles.warningBox}>
+          <View style={styles.warningHeader}>
+            <ShieldAlert size={16} color="#BE123C" />
+            <Text style={styles.warningTitle}>Khi nào cần gọi 115 khẩn cấp?</Text>
           </View>
+          <Text style={styles.warningText}>
+            • Khó thở dữ dội, tím tái sau khi dùng thuốc.{'\n'}
+            • Sốc phản vệ, sưng phù môi/mặt hoặc phát ban.{'\n'}
+            • Co giật hoặc mất ý thức đột ngột.
+          </Text>
+        </View>
 
-          {/* Action buttons */}
-          <View className="gap-2.5">
-            <Pressable
-              onPress={handleCall}
-              className="flex-row items-center justify-center gap-2 rounded-2xl bg-rose-600 py-3.5 px-4 shadow-lg shadow-rose-600/30 active:scale-[0.98]"
-            >
-              <PhoneCall size={18} color="#FFFFFF" strokeWidth={2.5} />
-              <Text className="text-base font-bold text-white">Gọi 115 Ngay Bây Giờ</Text>
-            </Pressable>
+        {/* Buttons */}
+        <View style={styles.buttonGroup}>
+          <Pressable onPress={handleCall} style={styles.callBtn}>
+            <PhoneCall size={18} color="#FFFFFF" strokeWidth={2.4} />
+            <Text style={styles.callBtnText}>Gọi 115 Ngay Bây Giờ</Text>
+          </Pressable>
 
-            <Pressable
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                onClose();
-              }}
-              className="items-center justify-center py-3 rounded-2xl bg-slate-100 active:bg-slate-200"
-            >
-              <Text className="text-sm font-semibold text-zinc-700">Đóng / Hủy bỏ</Text>
-            </Pressable>
-          </View>
+          <Pressable
+            onPress={() => {
+              triggerHaptic('light');
+              onClose();
+            }}
+            style={styles.cancelBtn}
+          >
+            <Text style={styles.cancelBtnText}>Đóng / Hủy Bỏ</Text>
+          </Pressable>
         </View>
       </View>
-    </Modal>
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  overlayContainer: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    zIndex: 99999,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingHorizontal: 20,
+  },
+  backdrop: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: 'rgba(0, 0, 0, 0.65)',
+  },
+  dialogCard: {
+    width: '100%',
+    maxWidth: 360,
+    backgroundColor: '#FFFFFF',
+    borderRadius: 28,
+    padding: 22,
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.3,
+    shadowRadius: 20,
+    elevation: 20,
+  },
+  header: {
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+  iconBox: {
+    width: 60,
+    height: 60,
+    borderRadius: 22,
+    backgroundColor: '#FFF1F2',
+    borderWidth: 1,
+    borderColor: '#FFE4E6',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 12,
+  },
+  title: {
+    fontSize: 20,
+    fontWeight: '800',
+    color: '#0F172A',
+    textAlign: 'center',
+  },
+  subTitle: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: '#E11D48',
+    marginTop: 4,
+    textAlign: 'center',
+  },
+  warningBox: {
+    backgroundColor: '#FFF1F2',
+    borderRadius: 18,
+    borderWidth: 1,
+    borderColor: '#FECDD3',
+    padding: 14,
+    marginBottom: 18,
+  },
+  warningHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: 6,
+  },
+  warningTitle: {
+    fontSize: 12,
+    fontWeight: '700',
+    color: '#9F1239',
+  },
+  warningText: {
+    fontSize: 12,
+    color: '#881337',
+    lineHeight: 18,
+  },
+  buttonGroup: {
+    gap: 10,
+  },
+  callBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 8,
+    backgroundColor: '#E11D48',
+    paddingVertical: 14,
+    borderRadius: 18,
+    shadowColor: '#E11D48',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.35,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  callBtnText: {
+    fontSize: 15,
+    fontWeight: '800',
+    color: '#FFFFFF',
+  },
+  cancelBtn: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 12,
+    borderRadius: 18,
+    backgroundColor: '#F1F5F9',
+  },
+  cancelBtnText: {
+    fontSize: 14,
+    fontWeight: '700',
+    color: '#475569',
+  },
+});
