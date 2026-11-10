@@ -37,7 +37,7 @@ export function MedexaHomeScreen() {
               <ScanLine size={20} color="#FFFFFF" strokeWidth={2.5} />
             </View>
             <Text style={styles.brandText}>
-              Medi<Text style={{ color: '#0066FE' }}>Scan AI</Text>
+              Dịch <Text style={{ color: '#0066FE' }}>Đơn Thuốc</Text>
             </Text>
           </View>
 
