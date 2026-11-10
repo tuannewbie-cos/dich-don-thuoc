@@ -1,4 +1,4 @@
-import { SUPABASE_CONFIG } from '@/constants/config';
+import { Alert } from 'react-native';
 
 const GEMINI_API_URL =
   'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
@@ -7,17 +7,42 @@ const SYSTEM_PROMPT = `Bạn là Trợ Lý Dược Sĩ AI MediScan thông minh v
 Nhiệm vụ: Giải thích chi tiết đơn thuốc, hướng dẫn liều dùng theo bữa ăn, giải thích tác dụng phụ, tương tác thuốc nguy hiểm và tư vấn kiêng cữ bằng tiếng Việt ngắn gọn, dễ hiểu, chuẩn y khoa.
 Lưu ý: Luôn dặn dò bệnh nhân tuân thủ nghiêm ngặt chỉ định của bác sĩ khám bệnh.`;
 
-export async function callGeminiAI(userMessage: string, apiKey?: string): Promise<string> {
-  const key = apiKey || process.env.EXPO_PUBLIC_GEMINI_API_KEY || '';
+const REQUEST_TIMEOUT_MS = 8000; // 8 seconds timeout as required by AGENTS.md
 
-  // If user has provided a Google AI Studio API key, call the real Gemini endpoint
-  if (key && key.trim().length > 10) {
+/**
+ * Sanitize API Key: remove whitespace, quotes, or accidental prefixes
+ */
+export function sanitizeApiKey(rawKey?: string): string {
+  if (!rawKey) return '';
+  return rawKey
+    .trim()
+    .replace(/^["']|["']$/g, '')
+    .replace(/^Bearer\s+/i, '')
+    .trim();
+}
+
+/**
+ * Call Google AI Studio Gemini API with strict timeout, key sanitization, and resilient fallback
+ */
+export async function callGeminiAI(userMessage: string, userApiKey?: string): Promise<string> {
+  const sanitizedKey = sanitizeApiKey(
+    userApiKey || process.env.EXPO_PUBLIC_GEMINI_API_KEY || ''
+  );
+
+  // If a key is present and looks valid (> 15 chars), attempt the real Gemini endpoint
+  if (sanitizedKey && sanitizedKey.length > 15) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => {
+      controller.abort();
+    }, REQUEST_TIMEOUT_MS);
+
     try {
-      const response = await fetch(`${GEMINI_API_URL}?key=${key.trim()}`, {
+      const response = await fetch(`${GEMINI_API_URL}?key=${encodeURIComponent(sanitizedKey)}`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
+        signal: controller.signal,
         body: JSON.stringify({
           contents: [
             {
@@ -35,19 +60,45 @@ export async function callGeminiAI(userMessage: string, apiKey?: string): Promis
       if (response.ok) {
         const json = await response.json();
         const candidateText = json?.candidates?.[0]?.content?.parts?.[0]?.text;
-        if (candidateText) {
+        if (candidateText && typeof candidateText === 'string') {
           return candidateText.trim();
         }
       } else {
         const errJson = await response.json().catch(() => null);
-        console.warn('Gemini API Error:', errJson);
+        const status = response.status;
+        console.warn(`[Gemini API Error ${status}]:`, errJson?.error?.message || response.statusText);
+
+        if (status === 400 || status === 401) {
+          Alert.alert(
+            'Google AI Key Không Hợp Lệ',
+            'API Key Google AI Studio không đúng hoặc đã bị thu hồi. Ứng dụng đã chuyển sang Trợ Lý Dược Sĩ dự phòng.'
+          );
+        } else if (status === 403) {
+          Alert.alert(
+            'Google AI Hết Lượt / Bị Chặn',
+            'API Key bị từ chối truy cập hoặc chưa bật Gemini API trên Google Cloud. Đã chuyển sang Trợ Lý Dược Sĩ dự phòng.'
+          );
+        }
       }
-    } catch (err) {
-      console.warn('Network error calling Gemini API:', err);
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.warn(`[Gemini API Timeout]: Phản hồi quá ${REQUEST_TIMEOUT_MS}ms, tự động kích hoạt fallback.`);
+      } else {
+        console.warn('[Gemini API Network Error]:', err.message || err);
+      }
+    } finally {
+      clearTimeout(timeoutId);
     }
   }
 
-  // Smart Offline Fallback Response Engine (Chống sập & Demo mượt mà tức thì)
+  // Resilient Offline Medical Response Engine (Resilient Data Fallback - 100% stable presentation)
+  return getOfflineFallbackResponse(userMessage);
+}
+
+/**
+ * Intelligent Vietnamese Medical Fallback Engine (Đảm bảo demo luôn mượt mà 100% không crash)
+ */
+function getOfflineFallbackResponse(userMessage: string): string {
   const lower = userMessage.toLowerCase();
 
   if (lower.includes('kiêng') || lower.includes('rượu') || lower.includes('bia') || lower.includes('cà phê')) {
@@ -70,5 +121,5 @@ export async function callGeminiAI(userMessage: string, apiKey?: string): Promis
     return '⚠️ Cảnh báo an toàn: Nếu bạn xuất hiện nốt ban đỏ, ngứa ngáy dữ dội, sưng mắt/môi hoặc cảm giác khó thở, hãy tạm ngưng cữ thuốc tiếp theo và liên hệ ngay cơ sở y tế gần nhất hoặc gọi tổng đài cấp cứu 115 để được xử trí dị ứng kịp thời.';
   }
 
-  return `Chào bạn! Tôi đã ghi nhận câu hỏi: "${userMessage}". Khi dùng thuốc theo đơn, bạn cần chú ý uống đúng giờ, đủ liều và không tự ý ngưng thuốc giữa chừng. Bạn có thể cài đặt Google AI Studio API Key ở góc trên để nhận phản hồi phân tích thời gian thực từ mô hình Gemini nhé!`;
+  return `Chào bạn! Tôi là Trợ Lý Dược Sĩ AI MediScan. Với câu hỏi "${userMessage}": Khi dùng thuốc theo đơn, bạn cần chú ý uống đúng giờ, đủ liều và không tự ý ngưng thuốc giữa chừng. Bạn có thể bấm biểu tượng chìa khóa (🔑) ở góc trên để cài đặt Google AI Studio API Key nhận phân tích thời gian thực từ mô hình Gemini nhé!`;
 }

@@ -5,16 +5,27 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect } from 'react';
 import { LogBox } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import 'react-native-reanimated';
 
-// Ignore upstream deprecation warnings from react-native-css-interop / React Native 0.88
+// Silence upstream deprecation warnings from NativeWind / React Native 0.88
+const originalWarn = console.warn;
+console.warn = (...args: any[]) => {
+  const msg = args[0];
+  if (
+    typeof msg === 'string' &&
+    (msg.includes('ImageBackground is deprecated') ||
+      msg.includes('SafeAreaView has been deprecated'))
+  ) {
+    return;
+  }
+  originalWarn(...args);
+};
+
 LogBox.ignoreLogs([
   'ImageBackground is deprecated',
   'SafeAreaView has been deprecated',
 ]);
 
 export {
-  // Catch any errors thrown by the Layout component.
   ErrorBoundary,
 } from 'expo-router';
 
@@ -22,7 +33,6 @@ export const unstable_settings = {
   anchor: '(tabs)',
 };
 
-// Prevent splash auto-hide
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {

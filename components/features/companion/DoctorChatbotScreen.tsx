@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -39,18 +39,21 @@ export function DoctorChatbotScreen() {
   const [showKeyModal, setShowKeyModal] = useState(false);
   const [keyInput, setKeyInput] = useState(geminiApiKey);
 
-  const handleSend = (textToSend?: string) => {
-    const text = textToSend || inputText;
-    if (!text.trim()) return;
-    sendChatMessage(text);
-    setInputText('');
-  };
+  const handleSend = useCallback(
+    (textToSend?: string) => {
+      const text = textToSend || inputText;
+      if (!text.trim()) return;
+      sendChatMessage(text);
+      setInputText('');
+    },
+    [inputText, sendChatMessage]
+  );
 
-  const handleSaveKey = () => {
+  const handleSaveKey = useCallback(() => {
     triggerHaptic('success');
     setGeminiApiKey(keyInput.trim());
     setShowKeyModal(false);
-  };
+  }, [keyInput, setGeminiApiKey]);
 
   return (
     <SafeAreaView style={styles.safeArea}>

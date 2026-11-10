@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useCallback } from 'react';
 import { View, Text, Pressable, Platform, StyleSheet } from 'react-native';
 import { Home, FileText, Bot, PhoneCall, ScanLine } from 'lucide-react-native';
 import { triggerHaptic } from '@/utils/haptics';
@@ -25,30 +25,32 @@ export function CustomBottomTabBar({
   const { openScanner } = usePrescriptionStore();
   const currentRouteName = state.routes[state.index]?.name;
 
-  const handleScanPress = () => {
+  const handleScanPress = useCallback(() => {
     triggerHaptic('medium');
     openScanner();
-  };
+  }, [openScanner]);
 
-  const handleTabPress = (routeName: string, targetKey?: string) => {
-    triggerHaptic('light');
-    if (currentRouteName === routeName) {
-      return; // Already on this tab, avoid re-rendering
-    }
-
-    if (navigation.emit && targetKey) {
-      const event = navigation.emit({
-        type: 'tabPress',
-        target: targetKey,
-        canPreventDefault: true,
-      });
-      if (!event.defaultPrevented) {
-        navigation.navigate(routeName);
+  const handleTabPress = useCallback(
+    (routeName: string, targetKey?: string) => {
+      triggerHaptic('light');
+      if (currentRouteName === routeName) {
+        return; // Already on this tab, avoid re-rendering
       }
-    } else {
+
+      if (navigation.emit && targetKey) {
+        try {
+          const event = navigation.emit({
+            type: 'tabPress',
+            target: targetKey,
+            canPreventDefault: true,
+          });
+          if (event && event.defaultPrevented) return;
+        } catch {}
+      }
       navigation.navigate(routeName);
-    }
-  };
+    },
+    [currentRouteName, navigation]
+  );
 
   const homeRoute = state.routes.find((r) => r.name === 'index');
   const recordsRoute = state.routes.find((r) => r.name === 'two');

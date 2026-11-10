@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -46,6 +46,15 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
   const [currentRx, setCurrentRx] = useState<Prescription | null>(null);
   const [exportFormat, setExportFormat] = useState<'PDF' | 'DOCX' | null>(null);
   const [showEmergency, setShowEmergency] = useState(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (timerRef.current) {
+        clearTimeout(timerRef.current);
+      }
+    };
+  }, []);
 
   if (!visible) return null;
 
@@ -53,8 +62,12 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
     triggerHaptic('medium');
     setAnalyzing(true);
 
-    // Fast simulated AI OCR (450ms)
-    setTimeout(() => {
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+
+    // Fast simulated AI OCR (450ms) with unmount protection
+    timerRef.current = setTimeout(() => {
       setAnalyzing(false);
       setCurrentRx(rx);
       addScannedPrescription(rx);
@@ -70,6 +83,10 @@ export function PrescriptionScannerModal({ visible, onClose }: PrescriptionScann
 
   const handleClose = () => {
     triggerHaptic('light');
+    if (timerRef.current) {
+      clearTimeout(timerRef.current);
+    }
+    setAnalyzing(false);
     setViewMode('scan');
     onClose();
   };

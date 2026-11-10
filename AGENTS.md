@@ -71,7 +71,7 @@ Mọi file phải được đặt đúng vị trí theo quy định sau:
    - Màn hình có Input phải bọc trong `KeyboardAvoidingView` hoặc `ScrollView` với `keyboardShouldPersistTaps="handled"`.
    - Danh sách nhiều phần tử phải dùng `FlatList`, không dùng `map()` bên trong `ScrollView`.
 4. **Trải nghiệm chạm & Haptics (Apple Direct Touch):**
-   - Dùng `<Pressable>` kèm hiệu ứng co giãn vật lý `active:scale-[0.98] active:opacity-85` và kích hoạt `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)`.
+   - Dùng `<Pressable>` kèm hiệu ứng co giãn vật lý `active:scale-[0.98] active:opacity-85` và kích hoạt qua utility an toàn (`triggerHaptic`) để không bị crash khi thiết bị không hỗ trợ Taptic engine.
 
 ---
 
@@ -110,7 +110,7 @@ export async function fetchItems() {
 ```typescript
 // constants/config.ts (An toàn commit lên Git)
 export const SUPABASE_CONFIG = {
-  url: process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://abcdefghijkl.supabase.co',
+  url: process.env.EXPO_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co',
   anonKey: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...',
 };
 ```
@@ -169,11 +169,11 @@ Hệ thống giao diện được tối ưu chuẩn theo **Apple Human Interface
   <Switch trackColor={{ false: '#E2E8F0', true: '#34C759' }} ios_backgroundColor="#E2E8F0" value={value} onValueChange={setValue} />
   ```
 - **Haptic Touch (Rung phản hồi Taptic Engine):**
-  - Bất cứ khi nào bấm nút chính hoặc gạt Switch, gọi ngay:
+  - Sử dụng utility bọc an toàn `triggerHaptic`:
   ```typescript
-  import * as Haptics from 'expo-haptics';
+  import { triggerHaptic } from '@/utils/haptics';
   // Khi chạm nút:
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  triggerHaptic('light');
   ```
 
 ### 8.4. Cấu Trúc Danh Sách Nhóm (iOS Inset Grouped List)
@@ -183,7 +183,7 @@ Mọi danh sách tính năng, cài đặt hoặc tùy chọn nên trình bày th
 <View className="mx-4 my-2 overflow-hidden rounded-3xl border border-slate-200/60 bg-white shadow-sm">
   {/* Hàng 1 */}
   <Pressable 
-    onPress={() => Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)}
+    onPress={() => triggerHaptic('light')}
     className="flex-row items-center justify-between border-b border-slate-100 p-4 active:bg-slate-50 active:opacity-80"
   >
     <View className="flex-row items-center gap-3">
@@ -201,7 +201,7 @@ Mọi danh sách tính năng, cài đặt hoặc tùy chọn nên trình bày th
 - **Nút Bấm Chính (Primary CTA Button):**
   ```tsx
   <Pressable 
-    onPress={() => { Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium); handlePress(); }}
+    onPress={() => { triggerHaptic('medium'); handlePress(); }}
     className="flex-row items-center justify-center gap-2 rounded-2xl bg-blue-600 py-3.5 px-6 shadow-sm shadow-blue-500/20 transition-transform active:scale-[0.98] active:opacity-90"
   >
     <Text className="text-base font-semibold text-white">Bắt đầu ngay</Text>
@@ -219,7 +219,7 @@ Mọi danh sách tính năng, cài đặt hoặc tùy chọn nên trình bày th
 
 - **Kiến trúc Serverless Bảo Mật (Zero-Config cho Mobile):** 
   - `GEMINI_API_KEY` được bảo vệ an toàn trên **Supabase Cloud Secrets**, tuyệt đối KHÔNG lưu trong mã nguồn client.
-  - App Mobile gọi tính năng AI thông qua Supabase Edge Function:
+  - App Mobile gọi tính năng AI thông qua Supabase Edge Function hoặc REST fallback có Timeout:
     ```typescript
     // services/ai.ts
     import { supabase } from './supabase';
@@ -248,3 +248,19 @@ Mọi danh sách tính năng, cài đặt hoặc tùy chọn nên trình bày th
 - **Trải nghiệm chờ AI (UX Latency):**
   - Nút bấm kích hoạt AI phải hiển thị trạng thái Loading rõ ràng (`ActivityIndicator` hoặc nút bị disable).
   - Vùng hiển thị kết quả AI phải có Skeleton loader giả lập chuyển động trong khi đang chờ kết quả.
+
+---
+
+## 10. Giao Thức Khởi Động: Từ Khóa "hackathon"
+Khi người dùng mở chat và nhắc đến từ khóa **"hackathon"**:
+1. **Nhắc lại Quy trình Phối hợp 2 màn hình song song cực nhanh:**
+   - Bạn chỉ cần bảo: *"Clone repo [link] về, nhiệm vụ của tôi là làm màn hình [tính năng X]"*.
+   - Tôi sẽ tự clone, tạo nhánh `feat/<tên-thành-viên>-<tính-năng>`, dựng khung chuẩn theo `AGENTS.md`.
+   - Bạn gõ prompt yêu cầu → Tôi thi công & kiểm tra typecheck → Bạn quan sát code cập nhật trên IDE và test trực tiếp trên Expo Go.
+2. **Điểm lại 5 nguyên tắc cốt lõi của "Hiến pháp" AGENTS.md:**
+   - Ưu tiên tính ổn định demo số 1, không over-engineering.
+   - Cấm 100% thẻ HTML Web (`<div>`, `<p>`, `<button>`), chỉ dùng `<View>`, `<Text>`, `<Pressable>`, `<SafeAreaView>`, `FlatList`.
+   - Tech stack: React Native Expo SDK mới nhất, TypeScript strict, NativeWind v4, `lucide-react-native`, Zustand, Supabase.
+   - Dữ liệu chống sập (Resilient Data): 100% màn hình phải có Mock Data Fallback trong `mocks/mockData.ts`.
+   - Không gây xung đột Git: Chỉ code trong `components/features/<tên-tính-năng>/`, không sửa file chung.
+3. **Sẵn sàng nhận Link Repo và Tên Task** để bắt tay vào việc ngay.

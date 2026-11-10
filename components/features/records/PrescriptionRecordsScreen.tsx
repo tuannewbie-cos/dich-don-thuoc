@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -37,10 +37,10 @@ export function PrescriptionRecordsScreen() {
     ? selectedRx
     : scannedHistory[0] || null;
 
-  const handleExport = (format: 'PDF' | 'DOCX') => {
+  const handleExport = useCallback((format: 'PDF' | 'DOCX') => {
     triggerHaptic('success');
     setExportFormat(format);
-  };
+  }, []);
 
   const fileName = activeRx
     ? `BanDich_DonThuoc_${activeRx.id}.${exportFormat?.toLowerCase() || 'pdf'}`
